@@ -133,6 +133,9 @@ void createSession(const std::string& name) {
     Screen newScreen = { "Process-" + name, 0, 100, getCurrentTimestamp() };
     screens[name] = newScreen;
     std::cout << "Created screen: " << name << std::endl;
+    #ifdef _WIN32
+    system("CLS");
+    #endif
     displayScreen(screens[name]);
 }
 
