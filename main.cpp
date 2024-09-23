@@ -99,19 +99,6 @@ void handleCommand(const std::string& command) {
         std::cout << "Unknown command. Please try again." << std::endl;
     }
 }
-
-// This function creates a new screen session
-void createSession(const std::string& name) {
-    if (screens.find(name) != screens.end()) {
-        std::cout << "Screen '" << name << "' already exists. Reattaching...\n";
-        return;
-    }
-
-    Screen newScreen = { "Process-" + name, 0, 100, getCurrentTimestamp() };
-    screens[name] = newScreen;
-    std::cout << "Created screen: " << name << std::endl;
-}
-
 // This function displays an existing screen's information
 void displayScreen(const Screen& screen) {
     std::cout << CYAN << "Screen: " << screen.processName << RESET << std::endl;
@@ -134,6 +121,21 @@ void displayScreen(const Screen& screen) {
         }
     }
 }
+
+
+// This function creates a new screen session
+void createSession(const std::string& name) {
+    if (screens.find(name) != screens.end()) {
+        std::cout << "Screen '" << name << "' already exists. Reattaching...\n";
+        return;
+    }
+
+    Screen newScreen = { "Process-" + name, 0, 100, getCurrentTimestamp() };
+    screens[name] = newScreen;
+    std::cout << "Created screen: " << name << std::endl;
+    displayScreen(screens[name]);
+}
+
 
 // This gets the current Timestamp when a process is created 
 std::string getCurrentTimestamp() {
