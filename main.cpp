@@ -31,6 +31,9 @@ void handleCommand(const std::string& command);
 
 int main() {
     std::string command;
+    #ifdef _WIN32
+            system("CLS");
+    #endif
     displayHeader();
 
     while (true) {
