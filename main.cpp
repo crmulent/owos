@@ -4,6 +4,7 @@
 #include <map>
 #include <ctime>
 #include <iomanip>
+#include <sstream>
 
 // ANSI Escape Codes
 const char GREEN[] = "\033[32m";
@@ -23,8 +24,9 @@ struct Screen {
 std::map<std::string, Screen> screens;
 
 // Function declarations
-void displayHeader();
+void displayHeader();   
 void displayScreen(const Screen& screen);
+void displayAllScreens();
 std::string getCurrentTimestamp();
 void createSession(const std::string& name);
 void handleCommand(const std::string& command);
@@ -79,6 +81,9 @@ void handleCommand(const std::string& command) {
             std::cout << "No such screen exists." << std::endl;
         }
 
+    } else if (command.rfind("screen -ls", 0) == 0) {
+        displayAllScreens();
+
     } else if (command == "scheduler-test") {
             std::cout << "scheduler-test command recognized. Doing something." << std::endl;
     
@@ -125,7 +130,6 @@ void displayScreen(const Screen& screen) {
     }
 }
 
-
 // This function creates a new screen session
 void createSession(const std::string& name) {
     if (screens.find(name) != screens.end()) {
@@ -142,12 +146,26 @@ void createSession(const std::string& name) {
     displayScreen(screens[name]);
 }
 
+void displayAllScreens() {
+    if (screens.empty()) {
+        std::cout << "No screens available." << std::endl;
+        return;
+    }
+
+    std::cout << CYAN << "Existing Screens:" << RESET << std::endl;
+    for (const auto& pair : screens) {
+        const Screen& screen = pair.second;
+        std::cout << "  " << screen.processName << " (Lines: " << screen.currentLine << " / " << screen.totalLines << ", Created at: " << screen.timestamp << ")" << std::endl;
+    }
+}
+
 
 // This gets the current Timestamp when a process is created 
 std::string getCurrentTimestamp() {
-    std::time_t t = std::time(nullptr);
-    std::tm* now = std::localtime(&t);
+    std::time_t now = std::time(nullptr);
+    std::tm local_time;               // Declare a local_time object
+    localtime_s(&local_time, &now);   // Use localtime_s
     std::ostringstream oss;
-    oss << std::put_time(now, "%m/%d/%Y, %I:%M:%S %p");
+    oss << std::put_time(&local_time, "%m/%d/%Y, %I:%M:%S %p");
     return oss.str();
 }
