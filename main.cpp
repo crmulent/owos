@@ -6,8 +6,9 @@
 #include <iomanip>
 #include <sstream>
 
-#include "consoleScreen.cpp"
-#include "consoleManager.cpp"
+#include "ConsoleScreen.h"
+#include "consoleManager.h"
+
 
 // Main function
 int main() {

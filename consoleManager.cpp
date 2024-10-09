@@ -1,28 +1,8 @@
+#include "ConsoleManager.h"
 #include <iostream>
 #include <cstdlib>
-#include <string>
-#include <map>
-#include <ctime>
-#include <iomanip>
-#include <sstream>
 
-#include "ProcessManager.cpp"
-
-
-
-// ConsoleManager class to store and manage console views (screens)
-class ConsoleManager {
-private:
-    std::map<std::string, Screen> screens;
-    ConsoleScreen screenManager;  // Uses ConsoleScreen for display operations
-    ProcessManager processManager;
-
-public:
-    void createSession(const std::string& name);
-    void displayAllScreens();
-    void handleCommand(const std::string& command);
-};
-
+// Create a new screen session
 void ConsoleManager::createSession(const std::string& name) {
     if (screens.find(name) != screens.end()) {
         std::cout << "Screen '" << name << "' already exists. Reattaching...\n";
@@ -38,42 +18,37 @@ void ConsoleManager::createSession(const std::string& name) {
     #ifdef _WIN32
         system("CLS");
     #endif
-        processManager.getProcess(name);
-        screenManager.displayScreen(processManager.getProcess(name));
+    processManager.getProcess(name);
+    screenManager.displayScreen(processManager.getProcess(name));
 }
 
+// Display all screens managed by ConsoleManager
 void ConsoleManager::displayAllScreens() {
     screenManager.displayAllProcess(processManager.getAllProcess());
 }
 
-// This function handles user commands and delegates to ConsoleManager
+// Handle user commands and delegate to appropriate functions
 void ConsoleManager::handleCommand(const std::string& command) {
     if (command == "initialize") {
         std::cout << "initialize command recognized. Doing something." << std::endl;
     } else if (command.rfind("screen -s ", 0) == 0) {
         std::string name = command.substr(10);
         createSession(name);
-
-
     } else if (command.rfind("screen -r ", 0) == 0) {
-
-
         std::string name = command.substr(10);
         if (screens.find(name) != screens.end()) {
             #ifdef _WIN32
                 system("CLS");
             #endif
-            //screenManager.displayScreen(screens[name]);
+            // screenManager.displayScreen(screens[name]); // Uncomment this if you want to display the screen
         } else {
             std::cout << "No such screen exists." << std::endl;
         }
     } else if (command.rfind("screen -ls", 0) == 0) {
-
         displayAllScreens();
-
     } else if (command == "clear") {
         #ifdef _WIN32
-                system("CLS");
+            system("CLS");
         #endif
         screenManager.displayHeader();
     } else if (command == "exit") {
