@@ -5,7 +5,8 @@
 #include <vector>
 #include <map>
 #include <memory>
-#include "Process.h"  // Include the Process class header
+#include "Process.h"
+#include "Scheduler.h"
 
 using namespace std;
 
@@ -13,15 +14,12 @@ class ProcessManager {
 private:
     map<string, std::shared_ptr<Process>> processList; // Map of process names to shared pointers of Process
     int pid_counter = 0; // Counter for process IDs
+    Scheduler scheduler; // Scheduler instance
 
 public:
-    // Add a new process
+    ProcessManager();
     void addProcess(string name, string time);
-
-    // Get a process by name
     shared_ptr<Process> getProcess(string name);
-
-    // Get all processes
     map<string, std::shared_ptr<Process>> getAllProcess();
 };
 

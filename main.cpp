@@ -1,5 +1,5 @@
 #include <iostream>
-#include <cstdlib> 
+#include <cstdlib>
 #include <string>
 #include <map>
 #include <ctime>
@@ -7,10 +7,8 @@
 #include <sstream>
 
 #include "ConsoleScreen.h"
-#include "consoleManager.h"
+#include "ConsoleManager.h"
 
-
-// Main function
 int main() {
     ConsoleManager manager;
     ConsoleScreen screenManager;
@@ -19,13 +17,16 @@ int main() {
     #ifdef _WIN32
         system("CLS");
     #endif
-    
+
     screenManager.displayHeader();
 
     while (true) {
-
         std::cout << "Enter a command: ";
         std::getline(std::cin, command);
+        if (command == "exit") {
+            manager.handleCommand(command);
+            break;
+        }
         manager.handleCommand(command);
     }
 

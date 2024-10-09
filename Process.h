@@ -24,7 +24,7 @@ public:
     };
 
     // Constructor
-    Process(int pid, const std::string& name, const std::string& time);
+    Process(int pid, const std::string& name, const std::string& time, int core);
 
     // Method to execute the current command
     void executeCurrentCommand();
@@ -48,7 +48,7 @@ private:
     std::vector<std::shared_ptr<ICommand>> CommandList;
 
     int commandCounter = 0;
-    int cpuCoreID = -1;
+    int cpuCoreID;
     RequirementFlags requirementFlags;
     ProcessState processState = READY;
 };

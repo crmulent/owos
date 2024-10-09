@@ -1,8 +1,8 @@
 #include "Process.h"
 
 // Constructor implementation
-Process::Process(int pid, const std::string& name, const std::string& time)
-    : Pid(pid), Name(name), Time(time), commandCounter(0), cpuCoreID(-1), processState(READY) {}
+Process::Process(int pid, const std::string& name, const std::string& time, int core)
+    : Pid(pid), Name(name), Time(time), cpuCoreID(core) {}
 
 // Method to execute the current command
 void Process::executeCurrentCommand() {
@@ -51,6 +51,6 @@ std::string Process::getTime() const {
 void Process::generate_100_print_commands() {
     for (int i = 1; i <= 100; ++i) {
         std::shared_ptr<ICommand> cmd = std::make_shared<PrintCommand>(Pid, cpuCoreID, "Hello World From " + Name + " started.");
-        CommandList.push_back(cmd); 
+        CommandList.push_back(cmd);
     }
 }
