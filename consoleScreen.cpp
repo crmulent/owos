@@ -7,7 +7,8 @@ const char CYAN[] = "\033[36m";
 const char RESET[] = "\033[0m";
 
 // Display the header information on the console
-void ConsoleScreen::displayHeader() {
+void ConsoleScreen::displayHeader()
+{
     std::cout << PINK << R"(
                                               ._.--._.
   /$$$$$$  /$$  /$$  /$$  /$$$$$$   /$$$$$$$  \|>_< |/
@@ -22,8 +23,10 @@ void ConsoleScreen::displayHeader() {
 }
 
 // Display all processes in the given map
-void ConsoleScreen::displayAllProcess(std::map<std::string, std::shared_ptr<Process>> processList) {
-    if (processList.empty()) {
+void ConsoleScreen::displayAllProcess(std::map<std::string, std::shared_ptr<Process>> processList)
+{
+    if (processList.empty())
+    {
         std::cout << "No screens available." << std::endl;
         return;
     }
@@ -32,54 +35,66 @@ void ConsoleScreen::displayAllProcess(std::map<std::string, std::shared_ptr<Proc
     std::stringstream finished;
 
     std::cout << CYAN << "Existing Screens:" << RESET << std::endl;
-    for (const auto& pair : processList) {
+    for (const auto &pair : processList)
+    {
         const std::shared_ptr<Process> process = pair.second;
         std::stringstream temp;
-        temp << std::setw(20) << "Name: " << process->getName() 
-             << std::setw(25) << "    (" << process->getTime() << ")" 
-             << std::setw(7) << "    Core: " << process->getCPUCoreID() 
-             << "    " << std::setw(6) << process->getCommandCounter() << " / " 
-             << std::setw(6) << process->getLinesOfCode() 
+        temp << std::setw(20) << "Name: " << process->getName()
+             << std::setw(25) << "    (" << process->getTime() << ")"
+             << std::setw(7) << "    Core: " << process->getCPUCoreID()
+             << "    " << std::setw(6) << process->getCommandCounter() << " / "
+             << std::setw(6) << process->getLinesOfCode()
              << std::endl;
 
-        if (process->getState() == Process::RUNNING) {
+        if (process->getState() == Process::RUNNING)
+        {
             running << temp.str() << std::endl;
-        } else {
+        }
+        else
+        {
             finished << temp.str() << std::endl;
         }
     }
 
-    std::cout << "Running Processes: \n" << running.str();
-    std::cout << "Finished Processes: \n" << finished.str();
+    std::cout << "Running Processes: \n"
+              << running.str();
+    std::cout << "Finished Processes: \n"
+              << finished.str();
 }
 
 // Display a specific process
-void ConsoleScreen::displayScreen(std::shared_ptr<Process> process) {
+void ConsoleScreen::displayScreen(std::shared_ptr<Process> process)
+{
     std::cout << CYAN << "Screen: " << process->getName() << RESET << std::endl;
-    std::cout << "Instruction: Line " << process->getCommandCounter() << " / " 
+    std::cout << "Instruction: Line " << process->getCommandCounter() << " / "
               << process->getLinesOfCode() << std::endl;
     std::cout << "Created at: " << process->getTime() << std::endl;
     std::cout << "Type 'exit' to return to the main menu." << std::endl;
 
     std::string command;
-    while (true) {
+    while (true)
+    {
         std::cout << "Enter a command: ";
         std::getline(std::cin, command);
-        if (command == "exit") {
+        if (command == "exit")
+        {
             clearscreen;
             displayHeader();
             break;
-        } else {
+        }
+        else
+        {
             std::cout << "Unknown command. Please try again." << std::endl;
         }
     }
 }
 
 // Get the current timestamp when a process is created
-std::string ConsoleScreen::getCurrentTimestamp() {
+std::string ConsoleScreen::getCurrentTimestamp()
+{
     std::time_t now = std::time(nullptr);
     std::tm local_time;
-    localtime_s(&local_time, &now);   // Use localtime_s for safety
+    localtime_s(&local_time, &now); // Use localtime_s for safety
     std::ostringstream oss;
     oss << std::put_time(&local_time, "%m/%d/%Y, %I:%M:%S %p");
     return oss.str();

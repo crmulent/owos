@@ -8,24 +8,26 @@
 #include <map>
 
 // ConsoleManager class to store and manage console views (screens)
-class ConsoleManager {
+class ConsoleManager
+{
 private:
     // Structure for storing screen info
-    struct Screen {
+    struct Screen
+    {
         std::string processName;
         int currentLine;
         int totalLines;
         std::string timestamp;
     };
 
-    std::map<std::string, Screen> screens;  // Store screens
-    ConsoleScreen screenManager;             // Uses ConsoleScreen for display operations
-    ProcessManager processManager;           // Manages processes
+    std::map<std::string, Screen> screens; // Store screens
+    ConsoleScreen screenManager;           // Uses ConsoleScreen for display operations
+    ProcessManager processManager;         // Manages processes
 
 public:
-    void createSession(const std::string& name);
+    void createSession(const std::string &name);
     void displayAllScreens();
-    void handleCommand(const std::string& command);
+    void handleCommand(const std::string &command);
 };
 
 #endif // CONSOLE_MANAGER_H
