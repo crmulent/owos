@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdlib> 
 #include <string>
+<<<<<<< Updated upstream
 
 // ANSI Escape Codes
 const char GREEN[] = "\033[32m";
@@ -9,15 +10,33 @@ const char PINK[] = "\e[38;5;212m";
 const char RESET[] = "\033[0m";
 
 void displayHeader();
+=======
+#include <map>
+#include <ctime>
+#include <iomanip>
+#include <sstream>
 
+#include "consoleScreen.cpp"
+#include "consoleManager.cpp"
+>>>>>>> Stashed changes
+
+// Main function
 int main() {
+    ConsoleManager manager;
+    ConsoleScreen screenManager;
     std::string command;
-    displayHeader();
+
+    #ifdef _WIN32
+        system("CLS");
+    #endif
+    
+    screenManager.displayHeader();
 
     while (true) {
 
         std::cout << "Enter a command: ";
         std::getline(std::cin, command);
+<<<<<<< Updated upstream
 
         if (command == "initialize") {
             std::cout << "initialize command recognized. Doing something." << std::endl;
@@ -40,10 +59,14 @@ int main() {
         } else {
             std::cout << "Unknown command. Please try again." << std::endl;
         }
+=======
+        manager.handleCommand(command);
+>>>>>>> Stashed changes
     }
 
     return 0;
 }
+<<<<<<< Updated upstream
 
 void displayHeader() {
 std::cout << PINK << R"(
@@ -58,3 +81,5 @@ std::cout << PINK << R"(
 std::cout << GREEN << "Hello, Welcome to OWOS commandline!" << RESET << std::endl;
 std::cout << CYAN << "Type 'exit' to quit, 'clear' to clear screen" << RESET << std::endl;
 }
+=======
+>>>>>>> Stashed changes
