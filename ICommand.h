@@ -1,18 +1,18 @@
-// ICommand.h
 #ifndef ICOMMAND_H
 #define ICOMMAND_H
 
 #include <string>
 
-
-class ICommand {
+class ICommand
+{
 public:
-    enum CommandType {
+    enum CommandType
+    {
         PRINT,
         // Add other command types here as needed
     };
 
-    ICommand(int pid, CommandType commandType) 
+    ICommand(int pid, CommandType commandType)
         : Pid(pid), commandType(commandType) {}
 
     virtual void execute() = 0;

@@ -1,20 +1,22 @@
 #ifndef PROCESSMANAGER_H
 #define PROCESSMANAGER_H
 
-#include <iostream>
-#include <vector>
-#include <map>
-#include <memory>
 #include "Process.h"
 #include "Scheduler.h"
 
+#include <map>
+#include <memory>
+#include <vector>
+#include <iostream>
+
 using namespace std;
 
-class ProcessManager {
+class ProcessManager
+{
 private:
     map<string, std::shared_ptr<Process>> processList; // Map of process names to shared pointers of Process
-    int pid_counter = 0; // Counter for process IDs
-    Scheduler scheduler; // Scheduler instance
+    int pid_counter = 0;                               // Counter for process IDs
+    Scheduler scheduler;                               // Scheduler instance
 
 public:
     ProcessManager();

@@ -1,10 +1,11 @@
 #ifndef CONSOLE_MANAGER_H
 #define CONSOLE_MANAGER_H
 
-#include <string>
-#include <map>
 #include "ProcessManager.h"
 #include "ConsoleScreen.h"
+
+#include <string>
+#include <map>
 
 // ConsoleManager class to store and manage console views (screens)
 class ConsoleManager {

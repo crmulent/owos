@@ -1,29 +1,30 @@
-#include <iostream>
-#include <cstdlib>
-#include <string>
+#include "ConsoleManager.h"
+#include "ConsoleScreen.h"
+#include "General.h"
+
 #include <map>
 #include <ctime>
+#include <string>
+#include <cstdlib>
 #include <iomanip>
 #include <sstream>
+#include <iostream>
 
-#include "ConsoleScreen.h"
-#include "ConsoleManager.h"
-
-int main() {
+int main()
+{
     ConsoleManager manager;
     ConsoleScreen screenManager;
     std::string command;
 
-    #ifdef _WIN32
-        system("CLS");
-    #endif
-
+    clearscreen;
     screenManager.displayHeader();
 
-    while (true) {
+    while (true)
+    {
         std::cout << "Enter a command: ";
         std::getline(std::cin, command);
-        if (command == "exit") {
+        if (command == "exit")
+        {
             manager.handleCommand(command);
             break;
         }

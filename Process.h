@@ -1,22 +1,26 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
-#include <memory>
-#include <vector>
-#include <string>
 #include "ICommand.h"
 #include "PrintCommand.h"
 
-class Process {
+#include <memory>
+#include <string>
+#include <vector>
+
+class Process
+{
 public:
-    struct RequirementFlags {
+    struct RequirementFlags
+    {
         bool requireFiles;
         int numFiles;
         bool requireMemory;
         int memoryRequired;
     };
 
-    enum ProcessState {
+    enum ProcessState
+    {
         READY,
         RUNNING,
         WAITING,
@@ -24,7 +28,7 @@ public:
     };
 
     // Constructor
-    Process(int pid, const std::string& name, const std::string& time, int core);
+    Process(int pid, const std::string &name, const std::string &time, int core);
 
     // Method to execute the current command
     void executeCurrentCommand();

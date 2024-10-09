@@ -1,15 +1,17 @@
 #ifndef CONSOLES_SCREEN_H
 #define CONSOLES_SCREEN_H
 
-#include <iostream>
+#include "Process.h"
+
 #include <map>
 #include <memory>
 #include <string>
-#include <sstream>
 #include <iomanip>
-#include "Process.h"
+#include <sstream>
+#include <iostream>
 
-class ConsoleScreen {
+class ConsoleScreen
+{
 public:
     // Displays the header information on the console
     void displayHeader();

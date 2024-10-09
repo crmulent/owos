@@ -1,15 +1,17 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
-#include <queue>
-#include <thread>
-#include <mutex>
-#include <condition_variable>
-#include <memory>
-#include <atomic>
 #include "Process.h"
 
-class Scheduler {
+#include <mutex>
+#include <queue>
+#include <atomic>
+#include <memory>
+#include <thread>
+#include <condition_variable>
+
+class Scheduler
+{
 public:
     Scheduler();
     void addProcess(std::shared_ptr<Process> process);

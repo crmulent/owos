@@ -1,4 +1,6 @@
 #include "ConsoleManager.h"
+#include "General.h"
+
 #include <iostream>
 #include <cstdlib>
 
@@ -15,9 +17,7 @@ void ConsoleManager::createSession(const std::string& name) {
     processManager.addProcess(name, screenManager.getCurrentTimestamp());
 
     std::cout << "Created screen: " << name << std::endl;
-    #ifdef _WIN32
-        system("CLS");
-    #endif
+    clearscreen;
     processManager.getProcess(name);
     // screenManager.displayScreen(processManager.getProcess(name));
 }
@@ -34,15 +34,13 @@ void ConsoleManager::handleCommand(const std::string& command) {
     } else if (command.rfind("screen -s ", 0) == 0) {
         std::string name = command.substr(10);
 
-        for (int i = 1; i <= 1000; i++) {
+        for (int i = 1; i <= 9; i++) {
             createSession(name + to_string(i));
         }
     } else if (command.rfind("screen -r ", 0) == 0) {
         std::string name = command.substr(10);
         if (screens.find(name) != screens.end()) {
-            #ifdef _WIN32
-                system("CLS");
-            #endif
+            clearscreen;
             // screenManager.displayScreen(screens[name]); // Uncomment this if you want to display the screen
         } else {
             std::cout << "No such screen exists." << std::endl;
@@ -50,9 +48,7 @@ void ConsoleManager::handleCommand(const std::string& command) {
     } else if (command.rfind("screen -ls", 0) == 0) {
         displayAllScreens();
     } else if (command == "clear") {
-        #ifdef _WIN32
-            system("CLS");
-        #endif
+        clearscreen;
         screenManager.displayHeader();
     } else if (command == "exit") {
         std::cout << "Exiting..." << std::endl;

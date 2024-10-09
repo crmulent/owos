@@ -1,8 +1,9 @@
 #include "ConsoleScreen.h"
+#include "General.h"
 
+const char PINK[] = "\e[38;5;212m";
 const char GREEN[] = "\033[32m";
 const char CYAN[] = "\033[36m";
-const char PINK[] = "\e[38;5;212m";
 const char RESET[] = "\033[0m";
 
 // Display the header information on the console
@@ -65,11 +66,7 @@ void ConsoleScreen::displayScreen(std::shared_ptr<Process> process) {
         std::cout << "Enter a command: ";
         std::getline(std::cin, command);
         if (command == "exit") {
-#ifdef _WIN32
-            system("CLS");
-#else
-            system("clear"); // For Unix-like systems
-#endif
+            clearscreen;
             displayHeader();
             break;
         } else {
