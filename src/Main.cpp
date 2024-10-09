@@ -1,6 +1,6 @@
-#include "ConsoleManager.h"
-#include "ConsoleScreen.h"
-#include "General.h"
+#include "../include/ConsoleManager.h"
+#include "../include/ConsoleScreen.h"
+#include "../include/General.h"
 
 #include <map>
 #include <ctime>

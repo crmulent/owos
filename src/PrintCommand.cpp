@@ -1,3 +1,5 @@
+#include "../include/ICommand.h"
+
 #include <ctime>
 #include <memory>
 #include <string>
@@ -6,8 +8,6 @@
 #include <iomanip>
 #include <sstream>
 #include <iostream>
-
-#include "ICommand.h"
 
 using namespace std;
 

@@ -1,5 +1,5 @@
-#include "ConsoleManager.h"
-#include "General.h"
+#include "../include/ConsoleManager.h"
+#include "../include/General.h"
 
 #include <iostream>
 #include <cstdlib>

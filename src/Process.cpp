@@ -1,4 +1,4 @@
-#include "Process.h"
+#include "../include/Process.h"
 
 // Constructor implementation
 Process::Process(int pid, const std::string &name, const std::string &time, int core)

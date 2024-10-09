@@ -1,0 +1,1 @@
+g++ src/* -o main.exe && main

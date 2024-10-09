@@ -1,5 +1,5 @@
-#include "ConsoleScreen.h"
-#include "General.h"
+#include "../include/ConsoleScreen.h"
+#include "../include/General.h"
 
 const char PINK[] = "\e[38;5;212m";
 const char GREEN[] = "\033[32m";
