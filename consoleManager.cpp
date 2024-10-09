@@ -21,7 +21,7 @@ void ConsoleManager::createSession(const std::string &name)
     std::cout << "Created screen: " << name << std::endl;
     clearscreen;
     processManager.getProcess(name);
-    // screenManager.displayScreen(processManager.getProcess(name));
+    screenManager.displayScreen(processManager.getProcess(name));
 }
 
 // Display all screens managed by ConsoleManager
@@ -40,11 +40,7 @@ void ConsoleManager::handleCommand(const std::string &command)
     else if (command.rfind("screen -s ", 0) == 0)
     {
         std::string name = command.substr(10);
-
-        for (int i = 1; i <= 9; i++)
-        {
-            createSession(name + to_string(i));
-        }
+        createSession(name);
     }
     else if (command.rfind("screen -r ", 0) == 0)
     {
@@ -52,7 +48,6 @@ void ConsoleManager::handleCommand(const std::string &command)
         if (screens.find(name) != screens.end())
         {
             clearscreen;
-            // screenManager.displayScreen(screens[name]); // Uncomment this if you want to display the screen
         }
         else
         {
