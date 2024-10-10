@@ -37,7 +37,9 @@ public:
     int getCommandCounter() const;
     int getLinesOfCode() const;
     int getCPUCoreID() const;
+    void setCPUCOREID(int core);
     ProcessState getState() const;
+    void setProcess(ProcessState state);
     int getPID() const;
     std::string getName() const;
     std::string getTime() const;
@@ -54,7 +56,7 @@ private:
     int commandCounter = 0;
     int cpuCoreID;
     RequirementFlags requirementFlags;
-    ProcessState processState = READY;
+    ProcessState processState;
 };
 
 #endif // PROCESS_H

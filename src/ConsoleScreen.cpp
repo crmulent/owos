@@ -31,6 +31,7 @@ void ConsoleScreen::displayAllProcess(std::map<std::string, std::shared_ptr<Proc
         return;
     }
 
+    std::stringstream ready;
     std::stringstream running;
     std::stringstream finished;
 
@@ -38,24 +39,37 @@ void ConsoleScreen::displayAllProcess(std::map<std::string, std::shared_ptr<Proc
     for (const auto &pair : processList)
     {
         const std::shared_ptr<Process> process = pair.second;
-        std::stringstream temp;
-        temp << std::setw(20) << "Name: " << process->getName()
-             << std::setw(25) << "    (" << process->getTime() << ")"
-             << std::setw(7) << "    Core: " << process->getCPUCoreID()
-             << "    " << std::setw(6) << process->getCommandCounter() << " / "
-             << std::setw(6) << process->getLinesOfCode()
-             << std::endl;
 
-        if (process->getState() == Process::RUNNING)
+        //construct the screen -ls
+        std::stringstream temp;
+        temp << std::left << std::setw(30) << process->getName() 
+            << " (" << process->getTime() << ") ";
+        
+        if(process->getState() == Process::READY){
+            temp << "  READY " << "   "
+            << process->getCommandCounter() << " / " 
+            << process->getLinesOfCode() << std::endl;
+            ready << temp.str() << std::endl;
+
+        }
+        else if (process->getState() == Process::RUNNING)
         {
+            temp << "  Core: " << process->getCPUCoreID() << "   "
+            << process->getCommandCounter() << " / " 
+            << process->getLinesOfCode() << std::endl;
             running << temp.str() << std::endl;
         }
         else
         {
+            temp << "  FINISHED " << "   "
+            << process->getCommandCounter() << " / " 
+            << process->getLinesOfCode() << std::endl;
             finished << temp.str() << std::endl;
         }
     }
 
+    std::cout << "Ready Processes: \n"
+              << ready.str();
     std::cout << "Running Processes: \n"
               << running.str();
     std::cout << "Finished Processes: \n"

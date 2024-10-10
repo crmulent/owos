@@ -24,6 +24,24 @@ void ConsoleManager::createSession(const std::string &name)
     screenManager.displayScreen(processManager.getProcess(name));
 }
 
+
+// Create a new screen session
+void ConsoleManager::generateSession(const std::string &name)
+{
+    if (screens.find(name) != screens.end())
+    {
+        std::cout << "Screen '" << name << "' already exists. Reattaching...\n";
+        return;
+    }
+
+    Screen newScreen = {"Process-" + name, 0, 100, screenManager.getCurrentTimestamp()};
+    screens[name] = newScreen;
+
+    processManager.addProcess(name, screenManager.getCurrentTimestamp());
+
+    std::cout << "Created screen: " << name << std::endl;
+    processManager.getProcess(name);
+}
 // Display all screens managed by ConsoleManager
 void ConsoleManager::displayAllScreens()
 {
@@ -35,11 +53,15 @@ void ConsoleManager::handleCommand(const std::string &command)
 {
     if (command == "initialize")
     {
-        std::cout << "initialize command recognized. Doing something." << std::endl;
+        //std::cout << "initialize command recognized. Doing something." << std::endl;
+        for (int i = 0; i < 10; i ++)
+            generateSession("Process_" + std::to_string(i));
+
     }
     else if (command.rfind("screen -s ", 0) == 0)
     {
         std::string name = command.substr(10);
+        
         createSession(name);
     }
     else if (command.rfind("screen -r ", 0) == 0)
@@ -48,6 +70,7 @@ void ConsoleManager::handleCommand(const std::string &command)
         if (screens.find(name) != screens.end())
         {
             clearscreen;
+            screenManager.displayScreen(processManager.getProcess(name));
         }
         else
         {

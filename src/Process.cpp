@@ -2,13 +2,14 @@
 
 // Constructor implementation
 Process::Process(int pid, const std::string &name, const std::string &time, int core)
-    : Pid(pid), Name(name), Time(time), cpuCoreID(core) {}
+    : Pid(pid), Name(name), Time(time), cpuCoreID(core), processState(READY){}
 
 // Method to execute the current command
 void Process::executeCurrentCommand()
 {
     if (commandCounter < CommandList.size())
     {
+        CommandList[commandCounter]->setCore(cpuCoreID);
         CommandList[commandCounter]->execute();
         commandCounter++;
     }
@@ -32,10 +33,19 @@ int Process::getCPUCoreID() const
     return cpuCoreID;
 }
 
+
+void Process::setCPUCOREID(int core){
+    cpuCoreID = core;
+}
+
 // Getter for process state
 Process::ProcessState Process::getState() const
 {
     return processState;
+}
+
+void Process::setProcess(ProcessState state){
+    processState = state;
 }
 
 // Getter for PID
@@ -61,7 +71,7 @@ void Process::generate_100_print_commands()
 {
     for (int i = 1; i <= 100; ++i)
     {
-        std::shared_ptr<ICommand> cmd = std::make_shared<PrintCommand>(Pid, cpuCoreID, "Hello World From " + Name + " started.");
+        std::shared_ptr<ICommand> cmd = std::make_shared<PrintCommand>(Pid, cpuCoreID, "Hello World From " + Name + " started.", Name);
         CommandList.push_back(cmd);
     }
 }

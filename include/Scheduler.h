@@ -26,7 +26,7 @@ private:
     std::atomic<int> activeThreads;
     std::vector<std::thread> workerThreads;
 
-    void run();
+    void run(int coreID);
 };
 
 #endif // SCHEDULER_H

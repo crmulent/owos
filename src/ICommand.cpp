@@ -24,6 +24,9 @@ public:
     }
 
     virtual void execute() = 0;
+    virtual void setCore(int core) = 0;
+
+ 
 
 protected:
     int Pid;

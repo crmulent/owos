@@ -14,8 +14,8 @@ using namespace std;
 class PrintCommand : public ICommand
 {
 public:
-    PrintCommand(int pid, int core, const std::string &toPrint)
-        : ICommand(pid, CommandType::PRINT), Core(core), ToPrint(toPrint)
+    PrintCommand(int pid, int core, const std::string &toPrint, std::string &Name)
+        : ICommand(pid, CommandType::PRINT), Core(core), ToPrint(toPrint), name(Name)
     {
     }
 
@@ -25,11 +25,14 @@ public:
         outfile << ToPrint << std::endl;
         outfile.close();
     }
-
+    void setCore(int core) override{
+        Core = core;
+    }
 private:
     string ToPrint;
     int Core;
     int Pid;
+    string name;
 
     // This gets the current Timestamp when a process is created
     string getCurrentTimestamp()

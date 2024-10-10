@@ -14,9 +14,9 @@ void Scheduler::addProcess(std::shared_ptr<Process> process)
 void Scheduler::start()
 {
     running = true;
-    for (int i = 0; i < 4; ++i)
+    for (int i = 1; i <= 4; ++i)
     {
-        workerThreads.emplace_back(&Scheduler::run, this);
+        workerThreads.emplace_back(&Scheduler::run, this, i);
     }
 }
 
@@ -33,17 +33,23 @@ void Scheduler::stop()
     }
 }
 
-void Scheduler::run()
+void Scheduler::run(int coreID)
 {
     while (running)
     {
         std::shared_ptr<Process> process;
         {
+            //make sures that only one thread/core can access the ready queue
             std::unique_lock<std::mutex> lock(queueMutex);
+
+            //wait until the queue is empty and the scheduler stops
             queueCondition.wait(lock, [this]
-                                { return !processQueue.empty() || !running; });
+            { return !processQueue.empty() || !running; });
+
             if (!running)
                 break;
+            
+            //gets the first process in the queue and pops it
             process = processQueue.front();
             processQueue.pop();
         }
@@ -51,12 +57,17 @@ void Scheduler::run()
         if (process)
         {
             activeThreads++;
-            std::cout << "Executing process: " << process->getName() << " on thread " << std::this_thread::get_id() << std::endl;
+            process->setProcess(Process::ProcessState::RUNNING);
+            
             while (process->getCommandCounter() < process->getLinesOfCode())
             {
+                process->setCPUCOREID(coreID);
                 process->executeCurrentCommand();
+
+                //put delay to analyze the scheduler
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
-            std::cout << "Finished process: " << process->getName() << std::endl;
+            process->setProcess(Process::ProcessState::FINISHED);
             activeThreads--;
             queueCondition.notify_one();
         }
