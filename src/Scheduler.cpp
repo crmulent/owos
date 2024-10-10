@@ -59,9 +59,9 @@ void Scheduler::run(int coreID)
             activeThreads++;
             process->setProcess(Process::ProcessState::RUNNING);
             
+            process->setCPUCOREID(coreID);
             while (process->getCommandCounter() < process->getLinesOfCode())
-            {
-                process->setCPUCOREID(coreID);
+            {    
                 process->executeCurrentCommand();
 
                 //put delay to analyze the scheduler
