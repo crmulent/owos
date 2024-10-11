@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iomanip>
 #include <sstream>
+#include <chrono>
 
 class PrintCommand : public ICommand
 {
@@ -32,11 +33,15 @@ private:
     // This gets the current Timestamp when a process is created
     std::string getCurrentTimestamp()
     {
-        std::time_t now = std::time(nullptr);
+        auto now = std::chrono::system_clock::now();
+        std::time_t time_now = std::chrono::system_clock::to_time_t(now);
+        auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
         std::tm local_time;
-        localtime_s(&local_time, &now); // Use localtime_s for safety
+        localtime_s(&local_time, &time_now);
         std::ostringstream oss;
-        oss << std::put_time(&local_time, "(%m/%d/%Y %I:%M:%S%p) ");
+        oss << std::put_time(&local_time, "(%m/%d/%Y %I:%M:%S")
+            << '.' << std::setfill('0') << std::setw(3) << milliseconds.count()
+            << std::put_time(&local_time, "%p)");
         return oss.str();
     }
 };
