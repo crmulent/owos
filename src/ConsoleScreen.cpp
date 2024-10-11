@@ -67,13 +67,14 @@ void ConsoleScreen::displayAllProcess(std::map<std::string, std::shared_ptr<Proc
             finished << temp.str() << std::endl;
         }
     }
-
+    std::cout << "------------------------------------------------\n";
     std::cout << "Ready Processes: \n"
               << ready.str();
-    std::cout << "Running Processes: \n"
+    std::cout << "\nRunning Processes: \n"
               << running.str();
-    std::cout << "Finished Processes: \n"
+    std::cout << "\nFinished Processes: \n"
               << finished.str();
+    std::cout << "------------------------------------------------\n";
 }
 
 // Display a specific process
