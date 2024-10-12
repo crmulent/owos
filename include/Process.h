@@ -28,7 +28,7 @@ public:
     };
 
     // Constructor
-    Process(int pid, const std::string &name, const std::string &time, int core);
+    Process(int pid, const std::string &name, const std::string &time, int core, int minIns, int maxIns);
 
     // Method to execute the current command
     void executeCurrentCommand();
@@ -45,7 +45,7 @@ public:
     std::string getTime() const;
 
     // Method to generate print commands
-    void generate_100_print_commands();
+    void generate_100_print_commands(int minIns, int maxIns);
 
 private:
     int Pid;
