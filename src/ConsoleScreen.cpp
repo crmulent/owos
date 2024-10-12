@@ -23,7 +23,7 @@ void ConsoleScreen::displayHeader()
 }
 
 // Display all processes in the given map
-void ConsoleScreen::displayAllProcess(std::map<std::string, std::shared_ptr<Process>> processList)
+void ConsoleScreen::displayAllProcess(std::map<std::string, std::shared_ptr<Process>> processList, int nCore)
 {
     if (processList.empty())
     {
@@ -34,6 +34,7 @@ void ConsoleScreen::displayAllProcess(std::map<std::string, std::shared_ptr<Proc
     std::stringstream ready;
     std::stringstream running;
     std::stringstream finished;
+    int coreUsage = 0;
 
     std::cout << CYAN << "Existing Screens:" << RESET << std::endl;
     for (const auto &pair : processList)
@@ -54,6 +55,7 @@ void ConsoleScreen::displayAllProcess(std::map<std::string, std::shared_ptr<Proc
         }
         else if (process->getState() == Process::RUNNING)
         {
+            coreUsage++;
             temp << "  Core: " << process->getCPUCoreID() << "   "
             << process->getCommandCounter() << " / " 
             << process->getLinesOfCode() << std::endl;
@@ -67,6 +69,9 @@ void ConsoleScreen::displayAllProcess(std::map<std::string, std::shared_ptr<Proc
             finished << temp.str() << std::endl;
         }
     }
+    std::cout << "CPU utilization: " << (static_cast<double>(coreUsage) / nCore) * 100 << "%\n";
+    std::cout << "Cores used: "<<coreUsage<< "\n";
+    std::cout << "Cores available: "<<nCore - coreUsage<< "\n";
     std::cout << "------------------------------------------------\n";
     std::cout << "Ready Processes: \n"
               << ready.str();

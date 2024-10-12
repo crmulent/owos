@@ -17,7 +17,7 @@ public:
     void displayHeader();
 
     // Displays all processes in the given map
-    void displayAllProcess(std::map<std::string, std::shared_ptr<Process>> processList);
+    void displayAllProcess(std::map<std::string, std::shared_ptr<Process>> processList, int nCpu);
 
     // Displays a specific process
     void displayScreen(std::shared_ptr<Process> process);

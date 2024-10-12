@@ -45,7 +45,7 @@ void ConsoleManager::generateSession(const std::string &name)
 // Display all screens managed by ConsoleManager
 void ConsoleManager::displayAllScreens()
 {
-    screenManager.displayAllProcess(processManager->getAllProcess());
+    screenManager.displayAllProcess(processManager->getAllProcess(), nCPU);
 }
 
 // Handle user commands and delegate to appropriate functions
