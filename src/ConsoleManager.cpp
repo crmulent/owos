@@ -39,7 +39,7 @@ void ConsoleManager::generateSession(const std::string &name)
 
     processManager->addProcess(name, screenManager.getCurrentTimestamp());
 
-    std::cout << "Created screen: " << name << std::endl;
+    // std::cout << "Created screen: " << name << std::endl;
     processManager->getProcess(name);
 }
 // Display all screens managed by ConsoleManager
@@ -51,6 +51,9 @@ void ConsoleManager::displayAllScreens()
 // Handle user commands and delegate to appropriate functions
 void ConsoleManager::handleCommand(const std::string &command)
 {
+    static bool schedulerRunning = false;
+    static std::thread schedulerThread;
+
     if (command == "initialize")
     {
         std::ifstream config_file("config.txt");
@@ -106,6 +109,24 @@ void ConsoleManager::handleCommand(const std::string &command)
     else if (command.rfind("screen -ls", 0) == 0)
     {
         displayAllScreens();
+    }
+    else if (command == "scheduler-test") {
+        if (!schedulerRunning) {
+            schedulerRunning = true;
+            schedulerThread = std::thread([this]() {
+                while (schedulerRunning) {
+                    std::this_thread::sleep_for(std::chrono::seconds(batch_process_freq));
+                    std::string name = "Process_" + std::to_string(screens.size());
+                    generateSession(name);
+                }
+            });
+        }
+    }
+    else if (command == "scheduler-stop") {
+        schedulerRunning = false;
+        if (schedulerThread.joinable()) {
+            schedulerThread.join();
+        }
     }
     else if (command == "clear")
     {
