@@ -11,10 +11,23 @@ void Scheduler::addProcess(std::shared_ptr<Process> process)
     queueCondition.notify_one();
 }
 
+// Setter methods
+void Scheduler::setAlgorithm(const std::string& algorithm) {
+    schedulerAlgo = algorithm;
+}
+
+void Scheduler::setNumCPUs(int num) {
+    nCPU = num;
+}
+
+void Scheduler::setDelays(int delay) {
+    delay_per_exec = delay;
+}
+
 void Scheduler::start()
 {
     running = true;
-    for (int i = 1; i <= 4; ++i)
+    for (int i = 1; i <= nCPU; ++i)
     {
         workerThreads.emplace_back(&Scheduler::run, this, i);
     }
@@ -65,7 +78,7 @@ void Scheduler::run(int coreID)
                 process->executeCurrentCommand();
 
                 //put delay to analyze the scheduler
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::this_thread::sleep_for(std::chrono::milliseconds(delay_per_exec));
             }
             process->setProcess(Process::ProcessState::FINISHED);
             activeThreads--;

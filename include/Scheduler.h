@@ -15,6 +15,9 @@ class Scheduler
 public:
     Scheduler();
     void addProcess(std::shared_ptr<Process> process);
+    void setAlgorithm(const std::string& algorithm);
+    void setDelays(int delay);
+    void setNumCPUs(int num);
     void start();
     void stop();
 
@@ -25,6 +28,9 @@ private:
     std::atomic<bool> running;
     std::atomic<int> activeThreads;
     std::vector<std::thread> workerThreads;
+    std::string schedulerAlgo;
+    int nCPU;
+    int delay_per_exec;
 
     void run(int coreID);
 };

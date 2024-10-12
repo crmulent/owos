@@ -6,10 +6,20 @@
 
 #include <string>
 #include <map>
+#include <iostream>
+#include <fstream>
 
 // ConsoleManager class to store and manage console views (screens)
 class ConsoleManager
 {
+    int nCPU;
+    std::string scheduler;
+    int  quantum_cycles;
+    int batch_process_freq;
+    int min_ins;
+    int max_ins;
+    int delays_per_exec;
+
 private:
     // Structure for storing screen info
     struct Screen
@@ -22,7 +32,7 @@ private:
 
     std::map<std::string, Screen> screens; // Store screens
     ConsoleScreen screenManager;           // Uses ConsoleScreen for display operations
-    ProcessManager processManager;         // Manages processes
+    ProcessManager* processManager;         // Manages processes
 
 public:
     void createSession(const std::string &name);

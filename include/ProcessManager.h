@@ -21,7 +21,7 @@ private:
     thread schedulerThread;
     
 public:
-    ProcessManager();
+    ProcessManager(int min_ins, int max_ins, int nCPU, std::string SchedulerAlgo, int delays_per_exec, int quantum_cycle);
     void addProcess(string name, string time);
     shared_ptr<Process> getProcess(string name);
     map<string, std::shared_ptr<Process>> getAllProcess();

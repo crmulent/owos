@@ -1,14 +1,17 @@
 #include "../include/ProcessManager.h"
 
-ProcessManager::ProcessManager()
+ProcessManager::ProcessManager(int min_ins, int max_ins, int nCPU, std::string SchedulerAlgo, int delays_per_exec, int quantum_cycle)
 {
+    scheduler.setAlgorithm(SchedulerAlgo);
+    scheduler.setDelays(delays_per_exec);
+    scheduler.setNumCPUs(nCPU);
+    
     schedulerThread = std::thread(&Scheduler::start, &scheduler);
 }
 
 void ProcessManager::addProcess(string name, string time)
 {
     pid_counter++;
-    //int core = (pid_counter - 1) % 4; // Assign cores starting from 0 in a round-robin fashion (assuming 4 cores)
     shared_ptr<Process> process(new Process(pid_counter, name, time, -1));
     processList[name] = process;
     process->generate_100_print_commands();
