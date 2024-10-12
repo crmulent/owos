@@ -52,21 +52,26 @@ void Scheduler::stop()
 
 void Scheduler::run(int coreID)
 {
+    if (schedulerAlgo == "RR") {
+        scheduleRR(coreID);
+    } else if (schedulerAlgo == "FCFS") {
+        scheduleFCFS(coreID);
+    }
+}
+
+void Scheduler::scheduleFCFS(int coreID)
+{
     while (running)
     {
         std::shared_ptr<Process> process;
         {
-            //make sures that only one thread/core can access the ready queue
             std::unique_lock<std::mutex> lock(queueMutex);
-
-            //wait until the queue is empty and the scheduler stops
             queueCondition.wait(lock, [this]
             { return !processQueue.empty() || !running; });
 
             if (!running)
                 break;
-            
-            //gets the first process in the queue and pops it
+
             process = processQueue.front();
             processQueue.pop();
         }
@@ -75,16 +80,57 @@ void Scheduler::run(int coreID)
         {
             activeThreads++;
             process->setProcess(Process::ProcessState::RUNNING);
-            
             process->setCPUCOREID(coreID);
             while (process->getCommandCounter() < process->getLinesOfCode())
-            {    
+            {
                 process->executeCurrentCommand();
-
-                //put delay to analyze the scheduler
                 std::this_thread::sleep_for(std::chrono::milliseconds(delay_per_exec));
             }
             process->setProcess(Process::ProcessState::FINISHED);
+            activeThreads--;
+            queueCondition.notify_one();
+        }
+    }
+}
+
+void Scheduler::scheduleRR(int coreID)
+{
+    while (running)
+    {
+        std::shared_ptr<Process> process;
+        {
+            std::unique_lock<std::mutex> lock(queueMutex);
+            queueCondition.wait(lock, [this]
+            { return !processQueue.empty() || !running; });
+
+            if (!running)
+                break;
+
+            process = processQueue.front();
+            processQueue.pop();
+        }
+
+        if (process)
+        {
+            activeThreads++;
+            process->setProcess(Process::ProcessState::RUNNING);
+            process->setCPUCOREID(coreID);
+            int quantum = 0;
+            while (process->getCommandCounter() < process->getLinesOfCode() && quantum < quantum_cycle)
+            {
+                process->executeCurrentCommand();
+                std::this_thread::sleep_for(std::chrono::milliseconds(delay_per_exec));
+                quantum++;
+            }
+            if (process->getCommandCounter() < process->getLinesOfCode())
+            {
+                std::unique_lock<std::mutex> lock(queueMutex);
+                processQueue.push(process);
+            }
+            else
+            {
+                process->setProcess(Process::ProcessState::FINISHED);
+            }
             activeThreads--;
             queueCondition.notify_one();
         }

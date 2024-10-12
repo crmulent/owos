@@ -35,6 +35,8 @@ private:
     int quantum_cycle;
 
     void run(int coreID);
+    void scheduleFCFS(int coreID);
+    void scheduleRR(int coreID);
 };
 
 #endif // SCHEDULER_H
