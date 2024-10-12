@@ -18,6 +18,7 @@ public:
     void setAlgorithm(const std::string& algorithm);
     void setDelays(int delay);
     void setNumCPUs(int num);
+    void setQuantumCycle(int quantum_cycle);
     void start();
     void stop();
 
@@ -31,6 +32,7 @@ private:
     std::string schedulerAlgo;
     int nCPU;
     int delay_per_exec;
+    int quantum_cycle;
 
     void run(int coreID);
 };

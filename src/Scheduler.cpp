@@ -24,6 +24,10 @@ void Scheduler::setDelays(int delay) {
     delay_per_exec = delay;
 }
 
+void Scheduler::setQuantumCycle(int Quantum_cycle){
+    quantum_cycle = Quantum_cycle;
+}
+
 void Scheduler::start()
 {
     running = true;

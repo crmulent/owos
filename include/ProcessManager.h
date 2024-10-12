@@ -19,6 +19,8 @@ private:
     int pid_counter = 0;                               // Counter for process IDs
     Scheduler scheduler;                               // Scheduler instance
     thread schedulerThread;
+    int min_ins;
+    int max_ins;
     
 public:
     ProcessManager(int min_ins, int max_ins, int nCPU, std::string SchedulerAlgo, int delays_per_exec, int quantum_cycle);
