@@ -48,6 +48,27 @@ void ConsoleManager::displayAllScreens()
     screenManager.displayAllProcess(processManager->getAllProcess(), nCPU);
 }
 
+//report-util functionality
+void ConsoleManager::reportUtil()
+{
+    // Call the displayAllProcess method and capture the output
+    std::stringstream output;
+    screenManager.displayAllProcessToStream(processManager->getAllProcess(), nCPU, output);
+
+    // Write the captured output to a file
+    std::ofstream outFile("csopesy-log.txt");
+    if (outFile.is_open())
+    {
+        outFile << output.str();
+        outFile.close();
+        std::cout << "Report saved to csopesy-log.txt" << std::endl;
+    }
+    else
+    {
+        std::cerr << "Unable to open file csopesy-log.txt" << std::endl;
+    }
+}
+
 // Handle user commands and delegate to appropriate functions
 void ConsoleManager::handleCommand(const std::string &command)
 {
@@ -109,6 +130,11 @@ void ConsoleManager::handleCommand(const std::string &command)
     else if (command.rfind("screen -ls", 0) == 0)
     {
         displayAllScreens();
+    }
+        
+    //report-util command implementation
+    else if (command == "report-util"){
+        reportUtil();
     }
     else if (command == "scheduler-test") {
         if (!schedulerRunning) {
