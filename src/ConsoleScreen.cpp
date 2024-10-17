@@ -82,6 +82,66 @@ void ConsoleScreen::displayAllProcess(std::map<std::string, std::shared_ptr<Proc
     std::cout << "------------------------------------------------\n";
 }
 
+void ConsoleScreen::displayAllProcessToStream(std::map<std::string, std::shared_ptr<Process>> processList, int nCore, std::ostream& out)
+{
+    if (processList.empty())
+    {
+        out << "No screens available." << std::endl;
+        return;
+    }
+
+    std::stringstream ready;
+    std::stringstream running;
+    std::stringstream finished;
+    int coreUsage = 0;
+
+    out << "Existing Screens:" << std::endl;
+    for (const auto &pair : processList)
+    {
+        const std::shared_ptr<Process> process = pair.second;
+
+        //construct the screen -ls
+        std::stringstream temp;
+        temp << std::left << std::setw(30) << process->getName() 
+            << " (" << process->getTime() << ") ";
+        
+        if(process->getState() == Process::READY){
+            temp << "  READY " << "   "
+            << process->getCommandCounter() << " / " 
+            << process->getLinesOfCode() << std::endl;
+            ready << temp.str() << std::endl;
+
+        }
+        else if (process->getState() == Process::RUNNING)
+        {
+            coreUsage++;
+            temp << "  Core: " << process->getCPUCoreID() << "   "
+            << process->getCommandCounter() << " / " 
+            << process->getLinesOfCode() << std::endl;
+            running << temp.str() << std::endl;
+        }
+        else
+        {
+            temp << "  FINISHED " << "   "
+            << process->getCommandCounter() << " / " 
+            << process->getLinesOfCode() << std::endl;
+            finished << temp.str() << std::endl;
+        }
+    }
+    out << "CPU utilization: " << (static_cast<double>(coreUsage) / nCore) * 100 << "%\n";
+    out << "Cores used: "<<coreUsage<< "\n";
+    out << "Cores available: "<<nCore - coreUsage<< "\n";
+    out << "------------------------------------------------\n";
+    out << "Ready Processes: \n"
+        << ready.str();
+    out << "\nRunning Processes: \n"
+        << running.str();
+    out << "\nFinished Processes: \n"
+        << finished.str();
+    out << "------------------------------------------------\n";
+}
+
+
 // Display a specific process
 void ConsoleScreen::displayScreen(std::shared_ptr<Process> process)
 {
