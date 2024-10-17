@@ -22,6 +22,8 @@ public:
     // Displays a specific process
     void displayScreen(std::shared_ptr<Process> process);
 
+    void displayAllProcessToStream(std::map<std::string, std::shared_ptr<Process>> processList, int nCore, std::ostream& out);
+
     // Gets the current timestamp
     std::string getCurrentTimestamp();
 };
