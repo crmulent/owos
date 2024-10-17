@@ -38,6 +38,7 @@ public:
     void createSession(const std::string &name);
     void generateSession(const std::string &name);
     void displayAllScreens();
+    void reportUtil();
     void handleCommand(const std::string &command);
 };
 
