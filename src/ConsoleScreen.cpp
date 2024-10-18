@@ -141,6 +141,23 @@ void ConsoleScreen::displayAllProcessToStream(std::map<std::string, std::shared_
     out << "------------------------------------------------\n";
 }
 
+void ConsoleScreen::displayUpdatedProcess(std::shared_ptr<Process> process)
+{
+    if (process->getState() == Process::RUNNING)
+    {
+        std::cout << CYAN << "Screen: " << process->getName() << RESET << std::endl;
+        std::cout << "Current instruction line: " << process->getCommandCounter() << " / "
+                << process->getLinesOfCode() << std::endl;
+        std::cout << "Lines of code: " << process->getLinesOfCode() << std::endl;
+        std::cout << std::endl;
+    }
+    else
+    {
+        std::cout << CYAN << "Screen: " << process->getName() << RESET << std::endl;
+        std::cout << "Finished!" << std::endl;
+        std::cout << std::endl;
+    }
+}
 
 // Display a specific process
 void ConsoleScreen::displayScreen(std::shared_ptr<Process> process)
@@ -156,7 +173,10 @@ void ConsoleScreen::displayScreen(std::shared_ptr<Process> process)
     {
         std::cout << "Enter a command: ";
         std::getline(std::cin, command);
-        if (command == "exit")
+        if (command == "process-smi") {
+            displayUpdatedProcess(process);
+        }
+        else if (command == "exit")
         {
             clearscreen;
             displayHeader();

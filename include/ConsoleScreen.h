@@ -19,6 +19,9 @@ public:
     // Displays all processes in the given map
     void displayAllProcess(std::map<std::string, std::shared_ptr<Process>> processList, int nCpu);
 
+    // Displays updated process
+    void displayUpdatedProcess(std::shared_ptr<Process> process);
+
     // Displays a specific process
     void displayScreen(std::shared_ptr<Process> process);
 
