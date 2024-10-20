@@ -128,14 +128,21 @@ void ConsoleManager::handleCommand(const std::string &command)
     else if (command.rfind("screen -r ", 0) == 0)
     {
         std::string name = command.substr(10);
-        if (screens.find(name) != screens.end())
+        std::shared_ptr<Process> process = processManager->getProcess(name);
+
+        if (process != nullptr)
         {
-            clearscreen;
-            screenManager.displayScreen(processManager->getProcess(name));
+            if(process->getState() != Process::FINISHED){
+                clearscreen;
+                screenManager.displayScreen(process);
+            }else{
+                std::cout << "Process " << name << " not found." <<std::endl;
+            }
+
         }
         else
         {
-            std::cout << "No such screen exists." << std::endl;
+            std::cout << "Process " << name << " not found." <<std::endl;
         }
     }
     else if (command.rfind("screen -ls", 0) == 0)

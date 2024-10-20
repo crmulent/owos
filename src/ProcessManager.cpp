@@ -23,7 +23,12 @@ void ProcessManager::addProcess(string name, string time)
 
 shared_ptr<Process> ProcessManager::getProcess(string name)
 {
-    return processList[name];
+    if(processList.find(name) != processList.end()){
+        return processList[name];
+    }else{
+        return nullptr;
+    }
+    
 }
 
 map<string, std::shared_ptr<Process>> ProcessManager::getAllProcess()

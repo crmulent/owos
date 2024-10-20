@@ -105,8 +105,7 @@ void ConsoleScreen::displayUpdatedProcess(std::shared_ptr<Process> process)
     if (process->getState() == Process::RUNNING)
     {
         std::cout << CYAN << "Screen: " << process->getName() << RESET << std::endl;
-        std::cout << "Current instruction line: " << process->getCommandCounter() << " / "
-                << process->getLinesOfCode() << std::endl;
+        std::cout << "Current instruction line: " << process->getCommandCounter() << std::endl;
         std::cout << "Lines of code: " << process->getLinesOfCode() << std::endl;
         std::cout << std::endl;
     }
