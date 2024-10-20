@@ -122,9 +122,8 @@ void Scheduler::scheduleFCFS(int coreID)
             logActiveThreads(coreID, nullptr);
             queueCondition.notify_one();
         }
-        else{
-            CoreStateManager::getInstance().setCoreState(coreID, false); // Mark core as idle
-        }
+        CoreStateManager::getInstance().setCoreState(coreID, false); // Mark core as idle
+
         
     }
 }
@@ -186,10 +185,10 @@ void Scheduler::scheduleRR(int coreID)
             logActiveThreads(coreID, nullptr);
             queueCondition.notify_one();
         }
-        else{
-            std::cout << "ID: " << coreID << " :: " << "Processes: " << processQueue.size() << " ";
-            CoreStateManager::getInstance().setCoreState(coreID, false); // Mark core as idle
-        }
+
+        //std::cout << "ID: " << coreID << " :: " << "Processes: " << processQueue.size() << " ";
+        CoreStateManager::getInstance().setCoreState(coreID, false); // Mark core as idle
+        
     }
 }
 
