@@ -40,10 +40,10 @@ void Scheduler::start()
     {
         workerThreads.emplace_back(&Scheduler::run, this, i);
     }
-    // {
-    //     std::unique_lock<std::mutex> lock(startMutex);
-    //     startCondition.wait(lock, [this] { return readyThreads == nCPU; });
-    // }
+    {
+        std::unique_lock<std::mutex> lock(startMutex);
+        startCondition.wait(lock, [this] { return readyThreads == nCPU; });
+    }
 }
 
 void Scheduler::stop()
@@ -62,13 +62,13 @@ void Scheduler::stop()
 
 void Scheduler::run(int coreID)
 {
-    // {
-    //     std::lock_guard<std::mutex> lock(startMutex);
-    //     readyThreads++;
-    //     if (readyThreads == nCPU) {
-    //         startCondition.notify_one();
-    //     }
-    // }
+    {
+        std::lock_guard<std::mutex> lock(startMutex);
+        readyThreads++;
+        if (readyThreads == nCPU) {
+            startCondition.notify_one();
+        }
+    }
     if (schedulerAlgo == "rr") {
         scheduleRR(coreID);
     } else if (schedulerAlgo == "fcfs") {
@@ -204,7 +204,8 @@ void Scheduler::logActiveThreads(int coreID, std::shared_ptr<Process> currentPro
     debugFile << "Core ID: " << coreID << ", Active Threads: " << activeThreads << ", ";
 
     if (currentProcess) {
-        debugFile << "Current Process: " << currentProcess->getPID() << ", ";
+        debugFile << "Current Process: " << currentProcess->getPID() << "(" << currentProcess->getCommandCounter() << "/" 
+            << currentProcess->getLinesOfCode() << "), ";
     } else {
         debugFile << "Current Process: None, ";
     }
