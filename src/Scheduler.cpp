@@ -69,9 +69,9 @@ void Scheduler::run(int coreID)
     //         startCondition.notify_one();
     //     }
     // }
-    if (schedulerAlgo == "RR") {
+    if (schedulerAlgo == "rr") {
         scheduleRR(coreID);
-    } else if (schedulerAlgo == "FCFS") {
+    } else if (schedulerAlgo == "fcfs") {
         scheduleFCFS(coreID);
     }
 }
