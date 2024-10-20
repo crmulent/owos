@@ -72,15 +72,23 @@ void ConsoleManager::reportUtil()
 // Handle user commands and delegate to appropriate functions
 void ConsoleManager::handleCommand(const std::string &command)
 {
-    static bool schedulerRunning = false;
     static std::thread schedulerThread;
+
+
+    if(!initialized && !(command == "exit" || command == "initialize")){
+        std::cout << "[WARNING] Initialize the OS first using the \"initialize\" command\n";
+        return;
+    }
+
 
     if (command == "initialize")
     {
+        clearscreen;
+        screenManager.displayHeader();
         std::ifstream config_file("config.txt");
 
-    // Temporary variable to skip keys in the file
-    std::string temp;
+        // Temporary variable to skip keys in the file
+        std::string temp;
 
         if (config_file.is_open()) {
             // Read values in the expected order
@@ -104,6 +112,9 @@ void ConsoleManager::handleCommand(const std::string &command)
             std::cout << "delays-per-exec: " << delays_per_exec << std::endl;
 
             processManager = new ProcessManager(min_ins, max_ins, nCPU, scheduler, delays_per_exec, quantum_cycles); 
+
+            initialized = true;
+
         } else {
             std::cerr << "Unable to open file" << std::endl;
         }
@@ -141,17 +152,21 @@ void ConsoleManager::handleCommand(const std::string &command)
             schedulerRunning = true;
             schedulerThread = std::thread([this]() {
                 while (schedulerRunning) {
-                    std::this_thread::sleep_for(std::chrono::seconds(batch_process_freq));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(batch_process_freq));
                     std::string name = "Process_" + std::to_string(screens.size());
                     generateSession(name);
                 }
             });
+        } else{
+            std::cout << "[ERROR] \"scheduler-test\" command is already running\n";
         }
     }
     else if (command == "scheduler-stop") {
         schedulerRunning = false;
         if (schedulerThread.joinable()) {
             schedulerThread.join();
+        }else{
+            std::cout << "[ERROR] Start the Scheduler First using \"scheduler-test\" command\n";
         }
     }
     else if (command == "clear")

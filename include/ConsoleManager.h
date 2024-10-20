@@ -19,6 +19,8 @@ class ConsoleManager
     int min_ins;
     int max_ins;
     int delays_per_exec;
+    bool initialized = false;
+    bool schedulerRunning = false;
 
 private:
     // Structure for storing screen info

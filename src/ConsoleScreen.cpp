@@ -47,7 +47,7 @@ void ConsoleScreen::displayAllProcessToStream(std::map<std::string, std::shared_
 
     // Calculate core usage
     for (bool coreState : coreStates) {
-        std::cout << "CoreState: " << coreState << std::endl;
+        //std::cout << "CoreState: " << coreState << std::endl; //debugging
         if (coreState) {
             coreUsage++;
         }
@@ -91,8 +91,10 @@ void ConsoleScreen::displayAllProcessToStream(std::map<std::string, std::shared_
     out << "------------------------------------------------\n";
     out << "Ready Processes: \n"
         << ready.str();
+    std::cout << "==========================================\n";
     out << "\nRunning Processes: \n"
         << running.str();
+    std::cout << "==========================================\n";
     out << "\nFinished Processes: \n"
         << finished.str();
     out << "------------------------------------------------\n";
