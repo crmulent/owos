@@ -157,6 +157,7 @@ void ConsoleManager::handleCommand(const std::string &command)
     else if (command == "scheduler-test") {
         if (!schedulerRunning) {
             schedulerRunning = true;
+            std::cout << "Scheduler-test started\n";
             schedulerThread = std::thread([this]() {
                 while (schedulerRunning) {
                     std::this_thread::sleep_for(std::chrono::milliseconds(batch_process_freq));
@@ -172,6 +173,7 @@ void ConsoleManager::handleCommand(const std::string &command)
         schedulerRunning = false;
         if (schedulerThread.joinable()) {
             schedulerThread.join();
+            std::cout << "Scheduler stopped\n";
         }else{
             std::cout << "[ERROR] Start the Scheduler First using \"scheduler-test\" command\n";
         }

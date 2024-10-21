@@ -81,6 +81,8 @@ void Scheduler::scheduleFCFS(int coreID)
     while (running)
     {
         std::shared_ptr<Process> process;
+        int assignedCore = -1;
+
         {
             std::unique_lock<std::mutex> lock(queueMutex);
             queueCondition.wait(lock, [this]
@@ -93,46 +95,66 @@ void Scheduler::scheduleFCFS(int coreID)
             processQueue.pop();
         }
 
+        // Find the first available core
+        for (int i = 1; i <= nCPU; ++i)
+        {
+            if (!CoreStateManager::getInstance().getCoreState(i)) // If core is not in use
+            {
+                assignedCore = i;
+                break; // Assign to the first available core
+            }
+        }
+
+        if (assignedCore == -1)
+        {
+            // No core is available, process will be put back in the queue
+            std::unique_lock<std::mutex> lock(queueMutex);
+            processQueue.push(process);
+            continue;
+        }
+
         if (process)
         {
             {
                 std::lock_guard<std::mutex> lock(activeThreadsMutex);
                 activeThreads++;
-                if (activeThreads > nCPU) {
+                if (activeThreads > nCPU)
+                {
                     std::cerr << "Error: Exceeded CPU limit!" << std::endl;
                     activeThreads--;
                     continue;
                 }
             }
-            logActiveThreads(coreID, process);
+            logActiveThreads(assignedCore, process);
             process->setProcess(Process::ProcessState::RUNNING);
-            process->setCPUCOREID(coreID);
-            CoreStateManager::getInstance().setCoreState(coreID, true); // Mark core as in use
+            process->setCPUCOREID(assignedCore);
+            CoreStateManager::getInstance().setCoreState(assignedCore, true); // Mark core as in use
+
             while (process->getCommandCounter() < process->getLinesOfCode())
             {
                 process->executeCurrentCommand();
                 std::this_thread::sleep_for(std::chrono::milliseconds(delay_per_exec));
             }
             process->setProcess(Process::ProcessState::FINISHED);
-            
+
             {
                 std::lock_guard<std::mutex> lock(activeThreadsMutex);
                 activeThreads--;
             }
-            logActiveThreads(coreID, nullptr);
+            logActiveThreads(assignedCore, nullptr);
             queueCondition.notify_one();
         }
-        CoreStateManager::getInstance().setCoreState(coreID, false); // Mark core as idle
-
-        
+        CoreStateManager::getInstance().setCoreState(assignedCore, false); // Mark core as idle
     }
 }
+
 
 void Scheduler::scheduleRR(int coreID)
 {
     while (running)
     {
         std::shared_ptr<Process> process;
+
         {
             std::unique_lock<std::mutex> lock(queueMutex);
             queueCondition.wait(lock, [this]
@@ -150,17 +172,21 @@ void Scheduler::scheduleRR(int coreID)
             {
                 std::lock_guard<std::mutex> lock(activeThreadsMutex);
                 activeThreads++;
-                if (activeThreads > nCPU) {
+                if (activeThreads > nCPU)
+                {
                     std::cerr << "Error: Exceeded CPU limit!" << std::endl;
                     activeThreads--;
                     continue;
                 }
             }
+
+            // Log the current active threads and assign the process to this core
             logActiveThreads(coreID, process);
-            process->setProcess(Process::ProcessState::RUNNING);
-            process->setCPUCOREID(coreID);
-            CoreStateManager::getInstance().setCoreState(coreID, true); // Mark core as in use
-            // std::cout << "Core " << coreID << " is used." << std::endl; // Debug statement
+            process->setProcess(Process::ProcessState::RUNNING);  // Set process to RUNNING state
+            process->setCPUCOREID(coreID);                        // Assign the current core (coreID) to this process
+            CoreStateManager::getInstance().setCoreState(coreID, true); // Mark the core as in use
+
+            // Execute the process for the time slice defined by quantum_cycle
             int quantum = 0;
             while (process->getCommandCounter() < process->getLinesOfCode() && quantum < quantum_cycle)
             {
@@ -168,16 +194,19 @@ void Scheduler::scheduleRR(int coreID)
                 std::this_thread::sleep_for(std::chrono::milliseconds(delay_per_exec));
                 quantum++;
             }
+
+            // If the process hasn't finished, push it back into the queue and mark it as READY
             if (process->getCommandCounter() < process->getLinesOfCode())
             {
+                process->setProcess(Process::ProcessState::READY);  // Set process to READY state
                 std::unique_lock<std::mutex> lock(queueMutex);
-                processQueue.push(process);
+                processQueue.push(process);  // Put it back into the queue
             }
             else
             {
-                process->setProcess(Process::ProcessState::FINISHED);
+                process->setProcess(Process::ProcessState::FINISHED);  // Set process to FINISHED state
             }
-            
+
             {
                 std::lock_guard<std::mutex> lock(activeThreadsMutex);
                 activeThreads--;
@@ -186,11 +215,11 @@ void Scheduler::scheduleRR(int coreID)
             queueCondition.notify_one();
         }
 
-        //std::cout << "ID: " << coreID << " :: " << "Processes: " << processQueue.size() << " ";
-        CoreStateManager::getInstance().setCoreState(coreID, false); // Mark core as idle
-        
+        CoreStateManager::getInstance().setCoreState(coreID, false); // Mark the core as idle
     }
 }
+
+
 
 void Scheduler::logActiveThreads(int coreID, std::shared_ptr<Process> currentProcess)
 {
