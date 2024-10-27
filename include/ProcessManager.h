@@ -3,6 +3,7 @@
 
 #include "Process.h"
 #include "Scheduler.h"
+#include "CPUClock.h"
 
 #include <map>
 #include <memory>
@@ -21,9 +22,10 @@ private:
     thread schedulerThread;
     int min_ins;
     int max_ins;
+    CPUClock* cpuClock;
     
 public:
-    ProcessManager(int min_ins, int max_ins, int nCPU, std::string SchedulerAlgo, int delays_per_exec, int quantum_cycle);
+    ProcessManager(int min_ins, int max_ins, int nCPU, std::string SchedulerAlgo, int delays_per_exec, int quantum_cycle, CPUClock* cpuClock);
     void addProcess(string name, string time);
     shared_ptr<Process> getProcess(string name);
     map<string, std::shared_ptr<Process>> getAllProcess();

@@ -17,9 +17,9 @@ public:
         : ICommand(pid, CommandType::PRINT), Core(core), ToPrint(toPrint), name(Name) {}
     void execute() override
     {
-        std::ofstream outfile(name + ".txt", std::ios::app);
-        outfile << getCurrentTimestamp() << " Core:" << Core << " \"" << ToPrint << "\"" << std::endl;
-        outfile.close();
+        // std::ofstream outfile(name + ".txt", std::ios::app);
+        // outfile << getCurrentTimestamp() << " Core:" << Core << " \"" << ToPrint << "\"" << std::endl;
+        // outfile.close();
     }
     void setCore(int core) override{
         Core = core;

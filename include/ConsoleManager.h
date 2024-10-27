@@ -3,6 +3,7 @@
 
 #include "ProcessManager.h"
 #include "ConsoleScreen.h"
+#include "CPUClock.h"
 
 #include <string>
 #include <map>
@@ -21,6 +22,8 @@ class ConsoleManager
     int delays_per_exec;
     bool initialized = false;
     bool schedulerRunning = false;
+    CPUClock* cpuClock;
+
 
 private:
     // Structure for storing screen info

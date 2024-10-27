@@ -1,5 +1,6 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
+#include "CPUClock.h"
 
 #include <queue>
 #include <thread>
@@ -22,6 +23,7 @@ public:
     void setQuantumCycle(int Quantum_cycle);
     void start();
     void stop();
+    void setCPUClock(CPUClock* cpuClock); 
 
 private:
     void run(int coreID);
@@ -44,6 +46,7 @@ private:
     std::ofstream debugFile;
     std::mutex startMutex;
     std::condition_variable startCondition;
+    CPUClock* cpuClock;
 };
 
 #endif // SCHEDULER_H

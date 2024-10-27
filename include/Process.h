@@ -45,7 +45,7 @@ public:
     std::string getTime() const;
 
     // Method to generate print commands
-    void generate_100_print_commands(int minIns, int maxIns);
+    void generate_commands(int minIns, int maxIns);
 
 private:
     int Pid;

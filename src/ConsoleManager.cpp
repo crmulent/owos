@@ -111,7 +111,9 @@ void ConsoleManager::handleCommand(const std::string &command)
             std::cout << "max-ins: " << max_ins << std::endl;
             std::cout << "delays-per-exec: " << delays_per_exec << std::endl;
 
-            processManager = new ProcessManager(min_ins, max_ins, nCPU, scheduler, delays_per_exec, quantum_cycles); 
+            cpuClock = new CPUClock();
+            cpuClock->startCPUClock();
+            processManager = new ProcessManager(min_ins, max_ins, nCPU, scheduler, delays_per_exec, quantum_cycles, cpuClock); 
 
             initialized = true;
 
@@ -158,24 +160,41 @@ void ConsoleManager::handleCommand(const std::string &command)
         if (!schedulerRunning) {
             schedulerRunning = true;
             std::cout << "Scheduler-test started\n";
+
             schedulerThread = std::thread([this]() {
+                int tickCounter = 0;
+                std::unique_lock<std::mutex> lock(cpuClock->getMutex(), std::defer_lock);
+
                 while (schedulerRunning) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(batch_process_freq));
-                    std::string name = "Process_" + std::to_string(screens.size());
-                    generateSession(name);
+                    // Wait for each CPU tick
+                    lock.lock();
+                    cpuClock->getCondition().wait(lock);
+                    lock.unlock();
+
+                    // Increment tick counter on each tick
+                    tickCounter++;
+
+                    // Generate session after every batch_process_freq ticks
+                    if (tickCounter >= batch_process_freq) {
+                        tickCounter = 0; // Reset counter
+                        std::string name = "Process_" + std::to_string(screens.size());
+                        generateSession(name);
+                    }
                 }
             });
-        } else{
+        } else {
             std::cout << "[ERROR] \"scheduler-test\" command is already running\n";
         }
     }
     else if (command == "scheduler-stop") {
-        schedulerRunning = false;
-        if (schedulerThread.joinable()) {
-            schedulerThread.join();
-            std::cout << "Scheduler stopped\n";
-        }else{
-            std::cout << "[ERROR] Start the Scheduler First using \"scheduler-test\" command\n";
+        if (schedulerRunning) {
+            schedulerRunning = false;
+            if (schedulerThread.joinable()) {
+                schedulerThread.join();
+                std::cout << "Scheduler-test stopped\n";
+            }
+        } else {
+            std::cout << "[ERROR] \"scheduler-test\" is not running\n";
         }
     }
     else if (command == "clear")

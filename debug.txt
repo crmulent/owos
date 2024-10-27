@@ -1,0 +1,4 @@
+Timestamp: 2024-10-27 20:07:20.325 Core ID: 1, Active Threads: 1, Current Process: 1(0/1908), Ready Queue: 
+Timestamp: 2024-10-27 20:07:20.635 Core ID: 2, Active Threads: 2, Current Process: 2(0/1911), Ready Queue: 
+Timestamp: 2024-10-27 20:07:20.948 Core ID: 3, Active Threads: 3, Current Process: 3(0/1914), Ready Queue: 
+Timestamp: 2024-10-27 20:07:21.263 Core ID: 4, Active Threads: 4, Current Process: 4(0/1921), Ready Queue: 

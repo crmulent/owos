@@ -66,7 +66,7 @@ std::string Process::getTime() const
     return Time;
 }
 
-void Process::generate_100_print_commands(int minIns, int maxIns) {
+void Process::generate_commands(int minIns, int maxIns) {
 
     std::srand(static_cast<unsigned int>(std::time(nullptr)) + Pid);
 

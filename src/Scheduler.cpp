@@ -1,15 +1,15 @@
 #include "../include/Scheduler.h"
 #include "../include/Process.h" 
 #include "../include/CoreStateManager.h"
+#include "../include/CPUClock.h"
 
 #include <iostream>
 #include <chrono>
 #include <iomanip>
 
-Scheduler::Scheduler() : running(false), activeThreads(0), debugFile("debug.txt"), readyThreads(0) {}
+Scheduler::Scheduler() : running(false), activeThreads(0), debugFile("debug.txt"), readyThreads(0), cpuClock(nullptr) {}
 
-void Scheduler::addProcess(std::shared_ptr<Process> process)
-{
+void Scheduler::addProcess(std::shared_ptr<Process> process) {
     std::unique_lock<std::mutex> lock(queueMutex);
     processQueue.push(process);
     queueCondition.notify_one();
@@ -22,22 +22,23 @@ void Scheduler::setAlgorithm(const std::string& algorithm) {
 void Scheduler::setNumCPUs(int num) {
     nCPU = num;
     CoreStateManager::getInstance().initialize(nCPU);
-    //std::cout << "Initialized coreStates with size: " << CoreStateManager::getInstance().getCoreStates().size() << std::endl;
 }
 
 void Scheduler::setDelays(int delay) {
     delay_per_exec = delay;
 }
 
+void Scheduler::setCPUClock(CPUClock* clock) {
+    cpuClock = clock;  // Assign the member variable
+}
+
 void Scheduler::setQuantumCycle(int Quantum_cycle){
     quantum_cycle = Quantum_cycle;
 }
 
-void Scheduler::start()
-{
+void Scheduler::start() {
     running = true;
-    for (int i = 1; i <= nCPU; ++i)
-    {
+    for (int i = 1; i <= nCPU; ++i) {
         workerThreads.emplace_back(&Scheduler::run, this, i);
     }
     {
@@ -46,22 +47,18 @@ void Scheduler::start()
     }
 }
 
-void Scheduler::stop()
-{
+void Scheduler::stop() {
     running = false;
     queueCondition.notify_all();
-    for (auto &thread : workerThreads)
-    {
-        if (thread.joinable())
-        {
+    for (auto &thread : workerThreads) {
+        if (thread.joinable()) {
             thread.join();
         }
     }
     debugFile.close();
 }
 
-void Scheduler::run(int coreID)
-{
+void Scheduler::run(int coreID) {
     {
         std::lock_guard<std::mutex> lock(startMutex);
         readyThreads++;
@@ -78,15 +75,13 @@ void Scheduler::run(int coreID)
 
 void Scheduler::scheduleFCFS(int coreID)
 {
-    while (running)
-    {
+    while (running) {
         std::shared_ptr<Process> process;
         int assignedCore = -1;
 
         {
             std::unique_lock<std::mutex> lock(queueMutex);
-            queueCondition.wait(lock, [this]
-            { return !processQueue.empty() || !running; });
+            queueCondition.wait(lock, [this] { return !processQueue.empty() || !running; });
 
             if (!running)
                 break;
@@ -96,45 +91,58 @@ void Scheduler::scheduleFCFS(int coreID)
         }
 
         // Find the first available core
-        for (int i = 1; i <= nCPU; ++i)
-        {
-            if (!CoreStateManager::getInstance().getCoreState(i)) // If core is not in use
-            {
+        for (int i = 1; i <= nCPU; ++i) {
+            if (!CoreStateManager::getInstance().getCoreState(i)) { // If core is not in use
                 assignedCore = i;
                 break; // Assign to the first available core
             }
         }
 
-        if (assignedCore == -1)
-        {
+        if (assignedCore == -1) {
             // No core is available, process will be put back in the queue
             std::unique_lock<std::mutex> lock(queueMutex);
             processQueue.push(process);
             continue;
         }
 
-        if (process)
-        {
+        if (process) {
             {
                 std::lock_guard<std::mutex> lock(activeThreadsMutex);
                 activeThreads++;
-                if (activeThreads > nCPU)
-                {
+                if (activeThreads > nCPU) {
                     std::cerr << "Error: Exceeded CPU limit!" << std::endl;
                     activeThreads--;
                     continue;
                 }
             }
+
             logActiveThreads(assignedCore, process);
             process->setProcess(Process::ProcessState::RUNNING);
             process->setCPUCOREID(assignedCore);
             CoreStateManager::getInstance().setCoreState(assignedCore, true); // Mark core as in use
 
-            while (process->getCommandCounter() < process->getLinesOfCode())
-            {
-                process->executeCurrentCommand();
-                std::this_thread::sleep_for(std::chrono::milliseconds(delay_per_exec));
+            int lastClock = cpuClock->getCPUClock();
+            bool firstCommandExecuted = false;
+            int cycleCounter = 0;
+
+            while (process->getCommandCounter() < process->getLinesOfCode()) {
+                {
+                    // Wait for the next CPU cycle
+                    std::unique_lock<std::mutex> lock(cpuClock->getMutex());
+                    cpuClock->getCondition().wait(lock, [&] {
+                        return cpuClock->getCPUClock() > lastClock;
+                    });
+                    lastClock = cpuClock->getCPUClock();
+                }
+
+                // Execute the first command immediately, then apply delay for subsequent commands
+                if (!firstCommandExecuted || (++cycleCounter >= delay_per_exec)) {
+                    process->executeCurrentCommand();
+                    firstCommandExecuted = true;
+                    cycleCounter = 0; // Reset cycle counter after each execution
+                }
             }
+
             process->setProcess(Process::ProcessState::FINISHED);
 
             {
@@ -144,21 +152,19 @@ void Scheduler::scheduleFCFS(int coreID)
             logActiveThreads(assignedCore, nullptr);
             queueCondition.notify_one();
         }
+
         CoreStateManager::getInstance().setCoreState(assignedCore, false); // Mark core as idle
     }
 }
 
-
 void Scheduler::scheduleRR(int coreID)
 {
-    while (running)
-    {
+    while (running) {
         std::shared_ptr<Process> process;
 
         {
             std::unique_lock<std::mutex> lock(queueMutex);
-            queueCondition.wait(lock, [this]
-            { return !processQueue.empty() || !running; });
+            queueCondition.wait(lock, [this] { return !processQueue.empty() || !running; });
 
             if (!running)
                 break;
@@ -167,44 +173,53 @@ void Scheduler::scheduleRR(int coreID)
             processQueue.pop();
         }
 
-        if (process)
-        {
+        if (process) {
             {
                 std::lock_guard<std::mutex> lock(activeThreadsMutex);
                 activeThreads++;
-                if (activeThreads > nCPU)
-                {
+                if (activeThreads > nCPU) {
                     std::cerr << "Error: Exceeded CPU limit!" << std::endl;
                     activeThreads--;
                     continue;
                 }
             }
 
-            // Log the current active threads and assign the process to this core
             logActiveThreads(coreID, process);
-            process->setProcess(Process::ProcessState::RUNNING);  // Set process to RUNNING state
-            process->setCPUCOREID(coreID);                        // Assign the current core (coreID) to this process
+            process->setProcess(Process::ProcessState::RUNNING);
+            process->setCPUCOREID(coreID);
             CoreStateManager::getInstance().setCoreState(coreID, true); // Mark the core as in use
 
-            // Execute the process for the time slice defined by quantum_cycle
             int quantum = 0;
-            while (process->getCommandCounter() < process->getLinesOfCode() && quantum < quantum_cycle)
-            {
-                process->executeCurrentCommand();
-                std::this_thread::sleep_for(std::chrono::milliseconds(delay_per_exec));
-                quantum++;
+            int lastClock = cpuClock->getCPUClock();
+            bool firstCommandExecuted = false;
+            int cycleCounter = 0;
+
+            while (process->getCommandCounter() < process->getLinesOfCode() && quantum < quantum_cycle) {
+                {
+                    // Wait for the next CPU cycle
+                    std::unique_lock<std::mutex> lock(cpuClock->getMutex());
+                    cpuClock->getCondition().wait(lock, [&] {
+                        return cpuClock->getCPUClock() > lastClock;
+                    });
+                    lastClock = cpuClock->getCPUClock();
+                }
+
+                // Execute the first command immediately, then apply delay for subsequent commands
+                if (!firstCommandExecuted || (++cycleCounter >= delay_per_exec)) {
+                    process->executeCurrentCommand();
+                    firstCommandExecuted = true;
+                    cycleCounter = 0; // Reset cycle counter after each execution
+                    quantum++;        // Increment quantum usage after each command execution
+                }
             }
 
             // If the process hasn't finished, push it back into the queue and mark it as READY
-            if (process->getCommandCounter() < process->getLinesOfCode())
-            {
-                process->setProcess(Process::ProcessState::READY);  // Set process to READY state
+            if (process->getCommandCounter() < process->getLinesOfCode()) {
+                process->setProcess(Process::ProcessState::READY);
                 std::unique_lock<std::mutex> lock(queueMutex);
-                processQueue.push(process);  // Put it back into the queue
-            }
-            else
-            {
-                process->setProcess(Process::ProcessState::FINISHED);  // Set process to FINISHED state
+                processQueue.push(process);
+            } else {
+                process->setProcess(Process::ProcessState::FINISHED);
             }
 
             {
@@ -218,6 +233,7 @@ void Scheduler::scheduleRR(int coreID)
         CoreStateManager::getInstance().setCoreState(coreID, false); // Mark the core as idle
     }
 }
+
 
 
 
