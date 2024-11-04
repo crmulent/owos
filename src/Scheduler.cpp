@@ -207,6 +207,9 @@ void Scheduler::scheduleRR(int coreID)
                     });
                     lastClock = cpuClock->getCPUClock();
                 }
+                else {
+                    std::this_thread::sleep_for(std::chrono::microseconds(1000));
+                }
 
                 // Execute the first command immediately, then apply delay for subsequent commands
                 if (!firstCommandExecuted || (++cycleCounter >= delay_per_exec)) {
@@ -214,6 +217,7 @@ void Scheduler::scheduleRR(int coreID)
                     firstCommandExecuted = true;
                     cycleCounter = 0; // Reset cycle counter after each execution
                     quantum++;        // Increment quantum usage after each command execution
+
                 }
             }
 
