@@ -2,7 +2,7 @@
 #include "../include/General.h"
 #include "../include/CoreStateManager.h"
 
-const char PINK[] = "\e[38;5;212m";
+const char PINK[] = "\033[38;5;212m"; //test
 const char GREEN[] = "\033[32m";
 const char CYAN[] = "\033[36m";
 const char RESET[] = "\033[0m";
