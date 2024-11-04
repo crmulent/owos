@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <sstream>
 #include <iostream>
+#include <mutex>
 
 class ConsoleScreen
 {
@@ -29,6 +30,8 @@ public:
 
     // Gets the current timestamp
     std::string getCurrentTimestamp();
+    std::mutex processListMutex;
+    std::mutex coreStatesMutex;
 };
 
 #endif // CONSOLES_SCREEN_H

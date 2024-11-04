@@ -119,7 +119,7 @@ void Scheduler::scheduleFCFS(int coreID)
             logActiveThreads(assignedCore, process);
             process->setProcess(Process::ProcessState::RUNNING);
             process->setCPUCOREID(assignedCore);
-            CoreStateManager::getInstance().setCoreState(assignedCore, true); // Mark core as in use
+            CoreStateManager::getInstance().setCoreState(assignedCore, true, process->getName()); // Mark core as in use
 
             int lastClock = cpuClock->getCPUClock();
             bool firstCommandExecuted = false;
@@ -153,7 +153,7 @@ void Scheduler::scheduleFCFS(int coreID)
             queueCondition.notify_one();
         }
 
-        CoreStateManager::getInstance().setCoreState(assignedCore, false); // Mark core as idle
+        CoreStateManager::getInstance().setCoreState(assignedCore, false, ""); // Mark core as idle
     }
 }
 
@@ -187,7 +187,9 @@ void Scheduler::scheduleRR(int coreID)
             logActiveThreads(coreID, process);
             process->setProcess(Process::ProcessState::RUNNING);
             process->setCPUCOREID(coreID);
-            CoreStateManager::getInstance().setCoreState(coreID, true); // Mark the core as in use
+            
+            CoreStateManager::getInstance().setCoreState(coreID, true, process->getName()); // Mark the core as in use
+            
 
             int quantum = 0;
             int lastClock = cpuClock->getCPUClock();
@@ -230,7 +232,7 @@ void Scheduler::scheduleRR(int coreID)
             queueCondition.notify_one();
         }
 
-        CoreStateManager::getInstance().setCoreState(coreID, false); // Mark the core as idle
+        CoreStateManager::getInstance().setCoreState(coreID, false, ""); // Mark the core as idle
     }
 }
 

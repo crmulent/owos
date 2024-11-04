@@ -9,6 +9,7 @@
 #include <map>
 #include <iostream>
 #include <fstream>
+#include <mutex>
 
 // ConsoleManager class to store and manage console views (screens)
 class ConsoleManager
@@ -45,6 +46,7 @@ public:
     void displayAllScreens();
     void reportUtil();
     void handleCommand(const std::string &command);
+    
 };
 
 #endif // CONSOLE_MANAGER_H

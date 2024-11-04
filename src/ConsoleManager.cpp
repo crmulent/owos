@@ -173,7 +173,6 @@ void ConsoleManager::handleCommand(const std::string &command)
 
                     // Increment tick counter on each tick
                     tickCounter++;
-
                     // Generate session after every batch_process_freq ticks
                     if (tickCounter >= batch_process_freq) {
                         tickCounter = 0; // Reset counter

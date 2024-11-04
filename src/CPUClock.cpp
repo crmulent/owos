@@ -18,7 +18,7 @@ void CPUClock::startCPUClock() {
                 }
                 
                 cycleCondition.notify_all(); // Notify on each tick
-                std::this_thread::sleep_for(std::chrono::milliseconds(1)); // Adjust as needed
+                std::this_thread::sleep_for(std::chrono::microseconds(0));
             }
         });
     }
