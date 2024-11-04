@@ -116,7 +116,7 @@ void Scheduler::scheduleFCFS(int coreID)
                 }
             }
 
-            logActiveThreads(assignedCore, process);
+            //logActiveThreads(assignedCore, process);
             process->setProcess(Process::ProcessState::RUNNING);
             process->setCPUCOREID(assignedCore);
             CoreStateManager::getInstance().setCoreState(assignedCore, true, process->getName()); // Mark core as in use
@@ -149,7 +149,7 @@ void Scheduler::scheduleFCFS(int coreID)
                 std::lock_guard<std::mutex> lock(activeThreadsMutex);
                 activeThreads--;
             }
-            logActiveThreads(assignedCore, nullptr);
+            //logActiveThreads(assignedCore, nullptr);
             queueCondition.notify_one();
         }
 
@@ -184,7 +184,7 @@ void Scheduler::scheduleRR(int coreID)
                 }
             }
 
-            logActiveThreads(coreID, process);
+            //logActiveThreads(coreID, process);
             process->setProcess(Process::ProcessState::RUNNING);
             process->setCPUCOREID(coreID);
             
@@ -228,7 +228,7 @@ void Scheduler::scheduleRR(int coreID)
                 std::lock_guard<std::mutex> lock(activeThreadsMutex);
                 activeThreads--;
             }
-            logActiveThreads(coreID, nullptr);
+            //logActiveThreads(coreID, nullptr);
             queueCondition.notify_one();
         }
 
@@ -246,12 +246,16 @@ void Scheduler::logActiveThreads(int coreID, std::shared_ptr<Process> currentPro
     auto now_c = std::chrono::system_clock::to_time_t(now);
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
 
-    debugFile << "Timestamp: " << std::put_time(std::localtime(&now_c), "%Y-%m-%d %H:%M:%S") << "." << std::setfill('0') << std::setw(3) << ms.count() << " ";
+    struct tm timeinfo;
+    localtime_s(&timeinfo, &now_c); // Use localtime_s instead of localtime
+
+    debugFile << "Timestamp: " << std::put_time(&timeinfo, "%Y-%m-%d %H:%M:%S") << "." 
+              << std::setfill('0') << std::setw(3) << ms.count() << " ";
     debugFile << "Core ID: " << coreID << ", Active Threads: " << activeThreads << ", ";
 
     if (currentProcess) {
-        debugFile << "Current Process: " << currentProcess->getPID() << "(" << currentProcess->getCommandCounter() << "/" 
-            << currentProcess->getLinesOfCode() << "), ";
+        debugFile << "Current Process: " << currentProcess->getPID() << "(" 
+                  << currentProcess->getCommandCounter() << "/" << currentProcess->getLinesOfCode() << "), ";
     } else {
         debugFile << "Current Process: None, ";
     }
@@ -267,3 +271,4 @@ void Scheduler::logActiveThreads(int coreID, std::shared_ptr<Process> currentPro
     }
     debugFile << std::endl;
 }
+

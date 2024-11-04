@@ -58,20 +58,20 @@ void ConsoleScreen::displayAllProcessToStream(std::map<std::string, std::shared_
         }
     }
 
-for (const std::string& name : run) {
-    // Search for the process by name in the processList
-    auto it = processList.find(name);
-    if (it != processList.end()) {  // Check if process is found
-        const std::shared_ptr<Process>& process = it->second;  // Access the shared_ptr
-        std::stringstream temp;
-        temp << std::left << std::setw(30) << process->getName()
-             << " (" << process->getTime() << ") ";
-        temp << "  Core: " << process->getCPUCoreID() << "   "
-             << process->getCommandCounter() << " / "
-             << process->getLinesOfCode() << std::endl;
-        running << temp.str();  // Append to the running output
-    }
-}
+    // for (const std::string& name : run) {
+    //     // Search for the process by name in the processList
+    //     auto it = processList.find(name);
+    //     if (it != processList.end()) {  // Check if process is found
+    //         const std::shared_ptr<Process>& process = it->second;  // Access the shared_ptr
+    //         std::stringstream temp;
+    //         temp << std::left << std::setw(30) << process->getName()
+    //             << " (" << process->getTime() << ") ";
+    //         temp << "  Core: " << process->getCPUCoreID() << "   "
+    //             << process->getCommandCounter() << " / "
+    //             << process->getLinesOfCode() << std::endl;
+    //         running << temp.str();  // Append to the running output
+    //     }
+    // }
 
 
     out << "Existing Screens:" << std::endl;
@@ -84,20 +84,20 @@ for (const std::string& name : run) {
         temp << std::left << std::setw(30) << process->getName() 
             << " (" << process->getTime() << ") ";
         
-        // if(process->getState() == Process::READY){
-        //     temp << "  READY " << "   "
-        //     << process->getCommandCounter() << " / " 
-        //     << process->getLinesOfCode() << std::endl;
-        //     ready << temp.str() << std::endl;
+        if(process->getState() == Process::READY){
+            // temp << "  READY " << "   "
+            // << process->getCommandCounter() << " / " 
+            // << process->getLinesOfCode() << std::endl;
+            // ready << temp.str() << std::endl;
 
-        // }
-        // else if (process->getState() == Process::RUNNING)
-        // {
-        //     temp << "  Core: " << process->getCPUCoreID() << "   "
-        //     << process->getCommandCounter() << " / " 
-        //     << process->getLinesOfCode() << std::endl;
-        //     running << temp.str() << std::endl;
-        // }
+        }
+        else if (process->getState() == Process::RUNNING)
+        {
+            temp << "  Core: " << process->getCPUCoreID() << "   "
+            << process->getCommandCounter() << " / " 
+            << process->getLinesOfCode() << std::endl;
+            running << temp.str() << std::endl;
+        }
         if (process->getState() == Process::FINISHED)
         {
             temp << "  FINISHED " << "   "
