@@ -197,6 +197,8 @@ void Scheduler::scheduleRR(int coreID)
             int cycleCounter = 0;
 
             while (process->getCommandCounter() < process->getLinesOfCode() && quantum < quantum_cycle) {
+
+                if (delay_per_exec != 0)
                 {
                     // Wait for the next CPU cycle
                     std::unique_lock<std::mutex> lock(cpuClock->getMutex());
