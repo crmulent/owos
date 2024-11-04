@@ -1,0 +1,13 @@
+﻿  ConsoleManager.cpp
+  ConsoleScreen.cpp
+  CoreStateManage.cpp
+  CPUClock.cpp
+  ICommand.cpp
+  Main.cpp
+  PrintCommand.cpp
+  Process.cpp
+C:\Users\Ford\source\repos\OWOS\src\Process.cpp(27,28): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+  ProcessManager.cpp
+  Scheduler.cpp
+  Generating Code...
+  OWOS.vcxproj -> C:\Users\Ford\source\repos\OWOS\x64\Debug\OWOS.exe
