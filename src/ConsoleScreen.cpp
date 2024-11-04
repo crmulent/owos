@@ -123,7 +123,7 @@ void ConsoleScreen::displayAllProcessToStream(std::map<std::string, std::shared_
 
 void ConsoleScreen::displayUpdatedProcess(std::shared_ptr<Process> process)
 {
-    if (process->getState() == Process::RUNNING)
+    if (process->getState() == Process::RUNNING || process->getState() == Process::READY)
     {
         std::cout << CYAN << "Screen: " << process->getName() << RESET << std::endl;
         std::cout << "Current instruction line: " << process->getCommandCounter() << std::endl;
