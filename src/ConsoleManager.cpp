@@ -99,6 +99,10 @@ void ConsoleManager::handleCommand(const std::string &command)
             config_file >> temp >> min_ins;  // Read "min-ins" and the value
             config_file >> temp >> max_ins;  // Read "max-ins" and the value
             config_file >> temp >> delays_per_exec;  // Read "delays-per-exec" and the value
+            config_file >> temp >> max_mem;
+            config_file >> temp >> mem_per_frame;
+            config_file >> temp >> mem_per_proc;
+
 
             config_file.close();  // Close the file after reading
 
@@ -109,11 +113,15 @@ void ConsoleManager::handleCommand(const std::string &command)
             std::cout << "batch-process-freq: " << batch_process_freq << std::endl;
             std::cout << "min-ins: " << min_ins << std::endl;
             std::cout << "max-ins: " << max_ins << std::endl;
-            std::cout << "delays-per-exec: " << delays_per_exec << std::endl;
+            std::cout << "delays_per_exec: " << delays_per_exec << std::endl;
+            std::cout << "max-overall-mem: " << max_mem << std::endl;
+            std::cout << "mem-per-frame: " << mem_per_frame << std::endl;
+            std::cout << "mem-per-proc: " << mem_per_proc << std::endl;
 
             cpuClock = new CPUClock();
             cpuClock->startCPUClock();
-            processManager = new ProcessManager(min_ins, max_ins, nCPU, scheduler, delays_per_exec, quantum_cycles, cpuClock); 
+            processManager = new ProcessManager(min_ins, max_ins, nCPU, scheduler, delays_per_exec, quantum_cycles, cpuClock, max_mem
+                                                , mem_per_frame, mem_per_proc);
 
             initialized = true;
 
@@ -179,7 +187,7 @@ void ConsoleManager::handleCommand(const std::string &command)
                         std::string name = "Process_" + std::to_string(screens.size());
                         generateSession(name);
                     }
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
                 }
             });
         } else {

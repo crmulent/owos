@@ -1,8 +1,8 @@
 #include "../include/Process.h"
 
 // Constructor implementation
-Process::Process(int pid, const std::string &name, const std::string &time, int core, int minIns, int maxIns)
-    : Pid(pid), Name(name), Time(time), cpuCoreID(core), processState(READY){}
+Process::Process(int pid, const std::string &name, const std::string &time, int core, int minIns, int maxIns, size_t mem_per_proc)
+    : Pid(pid), Name(name), Time(time), cpuCoreID(core), processState(READY), mem_per_proc(mem_per_proc){}
 
 // Method to execute the current command
 void Process::executeCurrentCommand()
@@ -25,6 +25,10 @@ int Process::getCommandCounter() const
 int Process::getLinesOfCode() const
 {
     return CommandList.size();
+}
+
+size_t Process::getMemoryRequired() const{
+    return mem_per_proc;
 }
 
 // Getter for CPU core ID

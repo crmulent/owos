@@ -85,10 +85,10 @@ void ConsoleScreen::displayAllProcessToStream(std::map<std::string, std::shared_
             << " (" << process->getTime() << ") ";
         
         if(process->getState() == Process::READY){
-            // temp << "  READY " << "   "
-            // << process->getCommandCounter() << " / " 
-            // << process->getLinesOfCode() << std::endl;
-            // ready << temp.str() << std::endl;
+            temp << "  READY " << "   "
+            << process->getCommandCounter() << " / " 
+            << process->getLinesOfCode() << std::endl;
+            ready << temp.str() << std::endl;
 
         }
         else if (process->getState() == Process::RUNNING)
@@ -110,9 +110,9 @@ void ConsoleScreen::displayAllProcessToStream(std::map<std::string, std::shared_
     out << "Cores used: "<<coreUsage<< "\n";
     out << "Cores available: "<<nCore - coreUsage<< "\n";
     out << "------------------------------------------------\n";
-    // out << "Ready Processes: \n"
-    //     << ready.str();
-    // std::cout << "==========================================\n";
+    out << "Ready Processes: \n"
+        << ready.str();
+    std::cout << "==========================================\n";
     out << "\nRunning Processes: \n"
         << running.str();
     std::cout << "==========================================\n";

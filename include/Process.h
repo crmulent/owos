@@ -28,7 +28,7 @@ public:
     };
 
     // Constructor
-    Process(int pid, const std::string &name, const std::string &time, int core, int minIns, int maxIns);
+    Process(int pid, const std::string &name, const std::string &time, int core, int minIns, int maxIns, size_t mem_per_proc);
 
     // Method to execute the current command
     void executeCurrentCommand();
@@ -37,6 +37,7 @@ public:
     int getCommandCounter() const;
     int getLinesOfCode() const;
     int getCPUCoreID() const;
+    size_t getMemoryRequired() const;
     void setCPUCOREID(int core);
     ProcessState getState() const;
     void setProcess(ProcessState state);
@@ -53,6 +54,7 @@ private:
     std::string Time;
     std::vector<std::shared_ptr<ICommand>> CommandList;
 
+    size_t mem_per_proc;
     int commandCounter = 0;
     int cpuCoreID;
     RequirementFlags requirementFlags;

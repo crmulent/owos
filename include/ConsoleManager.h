@@ -24,6 +24,9 @@ class ConsoleManager
     bool initialized = false;
     bool schedulerRunning = false;
     CPUClock* cpuClock;
+    size_t max_mem;
+    size_t mem_per_frame;
+    size_t mem_per_proc;
 
 
 private:
