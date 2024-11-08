@@ -2,7 +2,7 @@
 
 // Constructor implementation
 Process::Process(int pid, const std::string &name, const std::string &time, int core, int minIns, int maxIns, size_t mem_per_proc)
-    : Pid(pid), Name(name), Time(time), cpuCoreID(core), processState(READY), mem_per_proc(mem_per_proc){}
+    : Pid(pid), Name(name), Time(time), cpuCoreID(core), processState(READY), mem_per_proc(mem_per_proc), memory(nullptr){}
 
 // Method to execute the current command
 void Process::executeCurrentCommand()
@@ -20,6 +20,19 @@ int Process::getCommandCounter() const
 {
     return commandCounter;
 }
+
+// Getter for command counter
+void Process::setMemory(void* Memory)
+{
+    memory = Memory;
+}
+
+void* Process::getMemory() const
+{
+    return memory;
+}
+
+
 
 // Getter for number of commands
 int Process::getLinesOfCode() const

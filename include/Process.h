@@ -44,6 +44,8 @@ public:
     int getPID() const;
     std::string getName() const;
     std::string getTime() const;
+    void setMemory(void* Memory);
+    void* getMemory() const;
 
     // Method to generate print commands
     void generate_commands(int minIns, int maxIns);
@@ -59,6 +61,7 @@ private:
     int cpuCoreID;
     RequirementFlags requirementFlags;
     ProcessState processState;
+    void* memory;
 };
 
 #endif // PROCESS_H

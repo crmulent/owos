@@ -189,7 +189,17 @@ void Scheduler::scheduleRR(int coreID)
                 }
             }
            
-            void* memory = memoryAllocator->allocate(process->getMemoryRequired(), process->getName());
+
+           void* memory = nullptr; 
+
+            memory = process->getMemory();
+
+            if(process->getMemory() == nullptr){
+                memory = memoryAllocator->allocate(process->getMemoryRequired(), process->getName());
+                process->setMemory(memory);
+            }
+            
+            
 
             if (memory == nullptr) {
                 //std::cerr << "Error: Memory Insufficient!" << std::endl;
@@ -245,6 +255,7 @@ void Scheduler::scheduleRR(int coreID)
                 processQueue.push(process);
             } else {
                 process->setProcess(Process::ProcessState::FINISHED);
+                memoryAllocator->deallocate(memory, process->getMemoryRequired());
             }
 
             {
@@ -252,7 +263,7 @@ void Scheduler::scheduleRR(int coreID)
                 activeThreads--;
             }
 
-            memoryAllocator->deallocate(memory, process->getMemoryRequired());
+            
             queueCondition.notify_one();
         }
 
@@ -298,16 +309,22 @@ void Scheduler::logActiveThreads(int coreID, std::shared_ptr<Process> currentPro
 }
 
 void Scheduler::logMemoryState() {
-    std::ofstream outFile("memory_info.txt", std::ios::app);
+    // Increment the cycle counter
+    memoryLogCycleCounter++;
+
+    // Generate filename with the current memory log cycle counter
+    std::string filename = "generated_files/memory_stamp_" + std::to_string(memoryLogCycleCounter) + ".txt";
+    std::ofstream outFile(filename);
+
     if (outFile.is_open()) {
         std::time_t currentTime = std::time(nullptr);
         char timestamp[100];
         std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", std::localtime(&currentTime));
         outFile << "Timestamp: " << timestamp << std::endl;
 
-        outFile << "Number of processes in memory: "<< memoryAllocator->getNProcess() << std::endl;
+        outFile << "Number of processes in memory: " << memoryAllocator->getNProcess() << std::endl;
         outFile << "Total external fragmentation in KB: " << memoryAllocator->getExternalFragmentation() << std::endl;
-        outFile << "\n----end---- = "<< memoryAllocator->getMaxMemory() <<std::endl <<std::endl;
+        outFile << "\n----end---- = " << memoryAllocator->getMaxMemory() << std::endl << std::endl;
 
         std::map<size_t, std::tuple<std::string, size_t>> processList2 = memoryAllocator->getProcessList();
         for (const auto& pair : processList2) {
@@ -319,14 +336,12 @@ void Scheduler::logMemoryState() {
             size_t size = std::get<1>(value);
 
             // Printing the values
-            outFile << size <<std::endl;
-            outFile << proc_name <<std::endl;
-            outFile << index <<std::endl << std::endl;
+            outFile << size << std::endl;
+            outFile << proc_name << std::endl;
+            outFile << index << std::endl << std::endl;
         }
-        outFile << "\n----start---- = 0"  <<std::endl;
+        outFile << "\n----start---- = 0" << std::endl;
 
-
-        
         outFile.close();
     } else {
         std::cerr << "Unable to open the file!" << std::endl;

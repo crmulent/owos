@@ -53,6 +53,7 @@ private:
     std::condition_variable startCondition;
     CPUClock* cpuClock;
     IMemoryAllocator* memoryAllocator;
+    size_t memoryLogCycleCounter;
 };
 
 #endif // SCHEDULER_H

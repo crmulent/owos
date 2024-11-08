@@ -7,6 +7,7 @@ FlatMemoryAllocator::FlatMemoryAllocator(size_t maximumSize, size_t mem_per_fram
 }
 
 FlatMemoryAllocator::~FlatMemoryAllocator() {
+    std::lock_guard<std::mutex> lock(memoryMutex);  // Ensure memory is safely cleared
     memory.clear();
     allocationMap.clear();
 }
@@ -17,7 +18,7 @@ void* FlatMemoryAllocator::allocate(size_t size, std::string processName) {
         if (canAllocateAt(i, size)) {
             allocateAt(i, size);
             nProcess++;
-            processList[i] = std::make_tuple(processName, i+size);
+            processList[i] = std::make_tuple(processName, i + size);
             return &memory[i];
         }
     }
@@ -40,6 +41,7 @@ std::string FlatMemoryAllocator::visualizeMemory() {
 }
 
 void FlatMemoryAllocator::initializeMemory() {
+    std::lock_guard<std::mutex> lock(memoryMutex);  // Lock mutex for initialization
     std::fill(memory.begin(), memory.end(), '.');
     std::fill(allocationMap.begin(), allocationMap.end(), false);
 }
@@ -57,6 +59,7 @@ bool FlatMemoryAllocator::canAllocateAt(size_t index, size_t size) const {
 }
 
 void FlatMemoryAllocator::allocateAt(size_t index, size_t size) {
+    //std::lock_guard<std::mutex> lock(memoryMutex);  // Lock mutex for allocation
     for (size_t i = index; i < index + size; ++i) {
         allocationMap[i] = true;
         memory[i] = 'X';  // Mark allocated memory for visibility
@@ -65,6 +68,7 @@ void FlatMemoryAllocator::allocateAt(size_t index, size_t size) {
 }
 
 void FlatMemoryAllocator::deallocateAt(size_t index, size_t size) {
+    //std::lock_guard<std::mutex> lock(memoryMutex);  // Lock mutex for deallocation
     for (size_t i = index; i < index + size; ++i) {
         allocationMap[i] = false;
         memory[i] = '.';  // Reset to initial state
@@ -73,18 +77,21 @@ void FlatMemoryAllocator::deallocateAt(size_t index, size_t size) {
 }
 
 int FlatMemoryAllocator::getNProcess() {
+    std::lock_guard<std::mutex> lock(memoryMutex);  // Lock mutex for thread-safe access
     return nProcess;
 }
 
 std::map<size_t, std::tuple<std::string, size_t>> FlatMemoryAllocator::getProcessList() {
+    std::lock_guard<std::mutex> lock(memoryMutex);  // Lock mutex for thread-safe access
     return processList;
 }
 
-size_t FlatMemoryAllocator::getMaxMemory(){
+size_t FlatMemoryAllocator::getMaxMemory() {
+    std::lock_guard<std::mutex> lock(memoryMutex);  // Lock mutex for thread-safe access
     return maximumSize;
 }
 
-size_t FlatMemoryAllocator::getExternalFragmentation(){
+size_t FlatMemoryAllocator::getExternalFragmentation() {
     std::lock_guard<std::mutex> lock(memoryMutex);  // Lock mutex for thread-safe operation
     size_t totalFreeSpace = 0;
     size_t currentFreeBlockSize = 0;
