@@ -168,11 +168,11 @@ void Scheduler::scheduleRR(int coreID)
         std::shared_ptr<Process> process;
 
         {
+            // Minimize lock time by immediately checking if the queue is empty and only waiting if necessary
             std::unique_lock<std::mutex> lock(queueMutex);
             queueCondition.wait(lock, [this] { return !processQueue.empty() || !running; });
 
-            if (!running)
-                break;
+            if (!running) break;
 
             process = processQueue.front();
             processQueue.pop();
@@ -188,67 +188,66 @@ void Scheduler::scheduleRR(int coreID)
                     continue;
                 }
             }
-           
 
-           void* memory = nullptr; 
-
-            memory = process->getMemory();
-
-            if(process->getMemory() == nullptr){
+            // Check if the process already has memory allocated
+            void* memory = process->getMemory();
+            if (!memory) {
                 memory = memoryAllocator->allocate(process->getMemoryRequired(), process->getName());
                 process->setMemory(memory);
             }
-            
-            
 
-            if (memory == nullptr) {
-                //std::cerr << "Error: Memory Insufficient!" << std::endl;
-                activeThreads--;
-
-                // Return the process to the queue if memory allocation fails
+            if (!memory) {
+                // Memory allocation failed; put process back into the queue
                 {
                     std::lock_guard<std::mutex> lock(queueMutex);
                     processQueue.push(process);
                     queueCondition.notify_one();
                 }
+                activeThreads--;
                 continue;
             }
-            
+
             process->setProcess(Process::ProcessState::RUNNING);
             process->setCPUCOREID(coreID);
-            
             CoreStateManager::getInstance().setCoreState(coreID, true, process->getName()); // Mark core as in use
-            
+
             int quantum = 0;
             int lastClock = cpuClock->getCPUClock();
-            bool firstCommandExecuted = false;
+            bool firstCommandExecuted = true;
             int cycleCounter = 0;
+            //std::this_thread::sleep_for(std::chrono::microseconds(2000));
 
             while (process->getCommandCounter() < process->getLinesOfCode() && quantum < quantum_cycle) {
-                if (delay_per_exec != 0)
-                {
+                // Efficient wait mechanism; prevent unnecessary busy-waiting
+                if (delay_per_exec != 0) {
                     std::unique_lock<std::mutex> lock(cpuClock->getMutex());
                     cpuClock->getCondition().wait(lock, [&] {
                         return cpuClock->getCPUClock() > lastClock;
                     });
                     lastClock = cpuClock->getCPUClock();
                 } else {
-                    std::this_thread::sleep_for(std::chrono::microseconds(1000));
+                    //std::this_thread::sleep_for(std::chrono::microseconds(1000)); // Continue on if no delay is needed
                 }
 
+
+
+                // Execute the process commands with delay handling
                 if (!firstCommandExecuted || (++cycleCounter >= delay_per_exec)) {
                     process->executeCurrentCommand();
-                    firstCommandExecuted = true;
+                    firstCommandExecuted = false;
                     cycleCounter = 0;
                     quantum++;
                 }
             }
 
+            // Log memory state after each execution cycle
             {
                 std::lock_guard<std::mutex> lock(logMutex);
-                logMemoryState();  // Extracted log functionality for clarity
+                logMemoryState();
             }
+            std::this_thread::sleep_for(std::chrono::microseconds(2000));
 
+            // If the process hasn't finished, move it back to the ready queue
             if (process->getCommandCounter() < process->getLinesOfCode()) {
                 process->setProcess(Process::ProcessState::READY);
                 std::lock_guard<std::mutex> lock(queueMutex);
@@ -263,15 +262,13 @@ void Scheduler::scheduleRR(int coreID)
                 activeThreads--;
             }
 
-            
             queueCondition.notify_one();
         }
 
+        // Mark the core as idle after processing
         CoreStateManager::getInstance().setCoreState(coreID, false, "");
     }
 }
-
-
 
 
 
@@ -320,27 +317,30 @@ void Scheduler::logMemoryState() {
         std::time_t currentTime = std::time(nullptr);
         char timestamp[100];
         std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", std::localtime(&currentTime));
-        outFile << "Timestamp: " << timestamp << std::endl;
+        outFile << "Timestamp: (" << timestamp << ")" << std::endl;
 
         outFile << "Number of processes in memory: " << memoryAllocator->getNProcess() << std::endl;
         outFile << "Total external fragmentation in KB: " << memoryAllocator->getExternalFragmentation() << std::endl;
         outFile << "\n----end---- = " << memoryAllocator->getMaxMemory() << std::endl << std::endl;
 
         std::map<size_t, std::tuple<std::string, size_t>> processList2 = memoryAllocator->getProcessList();
-        for (const auto& pair : processList2) {
-            size_t index = pair.first;
-            const std::tuple<std::string, size_t>& value = pair.second;
+        
+        // Iterate in reverse order to match the display format
+        for (auto it = processList2.rbegin(); it != processList2.rend(); ++it) {
+            size_t index = it->first;
+            const std::tuple<std::string, size_t>& value = it->second;
 
             // Accessing the elements of the tuple
-            const std::string& proc_name = std::get<0>(value);
             size_t size = std::get<1>(value);
+            const std::string& proc_name = std::get<0>(value);
 
             // Printing the values
             outFile << size << std::endl;
             outFile << proc_name << std::endl;
             outFile << index << std::endl << std::endl;
         }
-        outFile << "\n----start---- = 0" << std::endl;
+
+        outFile << "----start---- = 0" << std::endl;
 
         outFile.close();
     } else {

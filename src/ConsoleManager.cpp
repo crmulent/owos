@@ -187,7 +187,11 @@ void ConsoleManager::handleCommand(const std::string &command)
                         std::string name = "Process_" + std::to_string(screens.size());
                         generateSession(name);
                     }
-                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                    
+                    if(screens.size() > 4){
+                        std::this_thread::sleep_for(std::chrono::milliseconds(40));
+                    }
+                    
                 }
             });
         } else {
