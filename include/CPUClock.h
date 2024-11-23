@@ -12,6 +12,8 @@ public:
     int getCPUClock();
     void startCPUClock();
     void stopCPUClock();
+    std::atomic<int> getActiveCPUNum();
+    void incrementActiveCPUNum();
     
     // Accessors to use condition variable and mutex externally
     std::condition_variable& getCondition() { return cycleCondition; }
@@ -23,5 +25,6 @@ private:
     std::thread CPUClockThread;
     std::condition_variable cycleCondition;
     std::mutex clockMutex;
+    std::atomic<int> activeNum;
 };
 #endif

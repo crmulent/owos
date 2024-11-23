@@ -94,3 +94,12 @@ void Process::generate_commands(int minIns, int maxIns) {
         CommandList.push_back(cmd);
     }
 }
+
+void Process::setAllocTime() {
+    allocationTime = std::chrono::system_clock::now();  // Use chrono's system clock
+}
+
+// Getter for allocation time
+std::chrono::time_point<std::chrono::system_clock> Process::getAllocTime() {
+    return allocationTime;  // Return chrono time_point
+}

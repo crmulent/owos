@@ -33,8 +33,10 @@ private:
     void scheduleFCFS(int coreID);
     void scheduleRR(int coreID);
     void logActiveThreads(int coreID, std::shared_ptr<Process> currentProcess);
-    void logMemoryState();
+    void logMemoryState(int n);
+    void startMemoryLog();
 
+    bool memoryLog = false;
     bool running;
     int activeThreads;
     int nCPU;
@@ -54,6 +56,7 @@ private:
     CPUClock* cpuClock;
     IMemoryAllocator* memoryAllocator;
     size_t memoryLogCycleCounter;
+    std::thread memoryLoggingThread;
 };
 
 #endif // SCHEDULER_H

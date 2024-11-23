@@ -1,5 +1,13 @@
 #include "../include/FlatMemoryAllocator.h"
-#include <iostream>  // For std::cout
+#include "../include/Process.h"
+#include <iostream> 
+#include <fstream>  
+#include <ctime>  
+#include <limits>  
+#include <cstring>
+#include <chrono>
+#include <iomanip>  // For std::put_time
+#include <memory>
 
 FlatMemoryAllocator::FlatMemoryAllocator(size_t maximumSize, size_t mem_per_frame) 
     : maximumSize(maximumSize), allocatedSize(0), memory(maximumSize, '.'), allocationMap(maximumSize, false), mem_per_frame(mem_per_frame), nProcess(0) {
@@ -12,13 +20,15 @@ FlatMemoryAllocator::~FlatMemoryAllocator() {
     allocationMap.clear();
 }
 
-void* FlatMemoryAllocator::allocate(size_t size, std::string processName) {
+void* FlatMemoryAllocator::allocate(std::shared_ptr<Process> process) {
+    size_t size = process->getMemoryRequired();
+    
     std::lock_guard<std::mutex> lock(memoryMutex);  // Lock mutex to prevent concurrent access
     for (size_t i = 0; i <= maximumSize - size; ++i) {
         if (canAllocateAt(i, size)) {
             allocateAt(i, size);
             nProcess++;
-            processList[i] = std::make_tuple(processName, i + size);
+            processList[i] = process;
             return &memory[i];
         }
     }
@@ -81,7 +91,7 @@ int FlatMemoryAllocator::getNProcess() {
     return nProcess;
 }
 
-std::map<size_t, std::tuple<std::string, size_t>> FlatMemoryAllocator::getProcessList() {
+std::map<size_t, std::shared_ptr<Process>> FlatMemoryAllocator::getProcessList() {
     std::lock_guard<std::mutex> lock(memoryMutex);  // Lock mutex for thread-safe access
     return processList;
 }
@@ -115,4 +125,55 @@ size_t FlatMemoryAllocator::getExternalFragmentation() {
     }
 
     return totalFreeSpace;
+}
+
+
+
+void FlatMemoryAllocator::deallocateOldest(size_t memSize) {
+    // Set the initial oldest time to the maximum possible time_point value
+    std::chrono::time_point<std::chrono::system_clock> oldestTime = std::chrono::time_point<std::chrono::system_clock>::max();
+    size_t oldestIndex = 0;  // To track the index of the oldest process
+    std::shared_ptr<Process> oldestProcess = nullptr;  // To store the oldest process
+
+    // Iterate through the process list to find the oldest process
+    for (const auto &pair : processList) {
+        size_t index = pair.first;
+        std::shared_ptr<Process> process = pair.second;
+
+        // Get the allocation time of the process
+        std::chrono::time_point<std::chrono::system_clock> allocTime = process->getAllocTime();
+
+        // Check if this process has the oldest allocation time and meets the memory requirements
+        if (allocTime < oldestTime && process->getMemoryRequired() >= memSize) {
+            oldestTime = allocTime;
+            oldestIndex = index;
+            oldestProcess = process;
+        }
+    }
+
+    // Now, oldestProcess holds the process with the oldest allocation time
+    if (oldestProcess) {
+        // Log the deallocation info to a backing store file
+        std::ofstream backingStore("backingstore.txt", std::ios::app);  // Open file in append mode
+
+        if (backingStore.is_open()) {
+            // Convert the allocation time to a human-readable format
+            std::time_t allocTime_t = std::chrono::system_clock::to_time_t(oldestProcess->getAllocTime());
+            std::tm allocTime_tm = *std::localtime(&allocTime_t);
+
+            // Write the deallocation log
+            backingStore << "Deallocated Process ID: " << oldestProcess->getName() << "\n";
+            backingStore << "Memory Deallocated: " << oldestProcess->getMemoryRequired() << " bytes\n";
+            backingStore << "Deallocation Time: " << std::put_time(&allocTime_tm, "%Y-%m-%d %H:%M:%S") << "\n";
+            backingStore << "============================================================================\n";
+
+            backingStore.close();
+        }
+
+        // Perform the deallocation
+        deallocate(oldestProcess->getMemory(), oldestProcess->getMemoryRequired());
+        oldestProcess->setMemory(nullptr);
+    } else {
+        std::cerr << "No process found to deallocate.\n";
+    }
 }

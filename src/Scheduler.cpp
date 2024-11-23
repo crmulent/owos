@@ -14,6 +14,11 @@ Scheduler::Scheduler(std::string SchedulerAlgo, int delays_per_exec, int nCPU, i
 
 
 void Scheduler::addProcess(std::shared_ptr<Process> process) {
+
+    if(!memoryLog){
+        startMemoryLog();
+    }
+
     std::unique_lock<std::mutex> lock(queueMutex);
     processQueue.push(process);
     queueCondition.notify_one();
@@ -45,22 +50,62 @@ void Scheduler::start() {
     for (int i = 1; i <= nCPU; ++i) {
         workerThreads.emplace_back(&Scheduler::run, this, i);
     }
+
+
     {
         std::unique_lock<std::mutex> lock(startMutex);
         startCondition.wait(lock, [this] { return readyThreads == nCPU; });
     }
 }
 
+void Scheduler::startMemoryLog() {
+    memoryLog = true;
+    memoryLoggingThread = std::thread([this]() {
+        
+        std::unique_lock<std::mutex> lock(cpuClock->getMutex());
+        
+        // Start an infinite loop to monitor the CPU clock ticks and log memory
+        while (running) {
+            // Wait for the clock tick to increment
+            cpuClock->getCondition().wait(lock);
+
+            bool anyCoreActive = false;
+            // Check if at least one CPU core is running
+            for (int i = 1; i <= nCPU; ++i) {
+                if (CoreStateManager::getInstance().getCoreState(i)) { // Check if the core is active
+                    anyCoreActive = true;
+                    break;
+                }
+            }
+
+             if (anyCoreActive) {
+                cpuClock->incrementActiveCPUNum();
+             }
+            
+        }
+    });
+}
+
+
 void Scheduler::stop() {
     running = false;
     queueCondition.notify_all();
+
+    // Stop memory logging thread
+    if (memoryLoggingThread.joinable()) {
+        memoryLoggingThread.join();
+    }
+
+    // Join worker threads
     for (auto &thread : workerThreads) {
         if (thread.joinable()) {
             thread.join();
         }
     }
+
     debugFile.close();
 }
+
 
 void Scheduler::run(int coreID) {
     {
@@ -191,20 +236,19 @@ void Scheduler::scheduleRR(int coreID)
 
             // Check if the process already has memory allocated
             void* memory = process->getMemory();
-            if (!memory) {
-                memory = memoryAllocator->allocate(process->getMemoryRequired(), process->getName());
-                process->setMemory(memory);
-            }
+
 
             if (!memory) {
-                // Memory allocation failed; put process back into the queue
-                {
-                    std::lock_guard<std::mutex> lock(queueMutex);
-                    processQueue.push(process);
-                    queueCondition.notify_one();
-                }
-                activeThreads--;
-                continue;
+                memory = memoryAllocator->allocate(process);
+                process->setAllocTime();
+                process->setMemory(memory);
+            }
+            
+            if (!memory) {
+                memoryAllocator->deallocateOldest(process->getMemoryRequired());
+                memory = memoryAllocator->allocate(process);
+                process->setAllocTime();
+                process->setMemory(memory);
             }
 
             process->setProcess(Process::ProcessState::RUNNING);
@@ -243,7 +287,6 @@ void Scheduler::scheduleRR(int coreID)
             // Log memory state after each execution cycle
             {
                 std::lock_guard<std::mutex> lock(logMutex);
-                logMemoryState();
             }
             std::this_thread::sleep_for(std::chrono::microseconds(2000));
 
@@ -255,6 +298,7 @@ void Scheduler::scheduleRR(int coreID)
             } else {
                 process->setProcess(Process::ProcessState::FINISHED);
                 memoryAllocator->deallocate(memory, process->getMemoryRequired());
+                process->setMemory(nullptr);
             }
 
             {
@@ -305,12 +349,9 @@ void Scheduler::logActiveThreads(int coreID, std::shared_ptr<Process> currentPro
     debugFile << std::endl;
 }
 
-void Scheduler::logMemoryState() {
-    // Increment the cycle counter
-    memoryLogCycleCounter++;
-
+void Scheduler::logMemoryState(int n) {
     // Generate filename with the current memory log cycle counter
-    std::string filename = "generated_files/memory_stamp_" + std::to_string(memoryLogCycleCounter) + ".txt";
+    std::string filename = "generated_files/memory_stamp_" + std::to_string(n) + ".txt";
     std::ofstream outFile(filename);
 
     if (outFile.is_open()) {
@@ -323,16 +364,18 @@ void Scheduler::logMemoryState() {
         outFile << "Total external fragmentation in KB: " << memoryAllocator->getExternalFragmentation() << std::endl;
         outFile << "\n----end---- = " << memoryAllocator->getMaxMemory() << std::endl << std::endl;
 
-        std::map<size_t, std::tuple<std::string, size_t>> processList2 = memoryAllocator->getProcessList();
+        std::map<size_t, std::shared_ptr<Process>> processList2 = memoryAllocator->getProcessList();
         
         // Iterate in reverse order to match the display format
         for (auto it = processList2.rbegin(); it != processList2.rend(); ++it) {
-            size_t index = it->first;
-            const std::tuple<std::string, size_t>& value = it->second;
+            const auto& pair = *it;
+        
+            size_t index = pair.first;
+            std::shared_ptr<Process> process = pair.second;
 
             // Accessing the elements of the tuple
-            size_t size = std::get<1>(value);
-            const std::string& proc_name = std::get<0>(value);
+            size_t size = process->getMemoryRequired();
+            const std::string& proc_name = process->getName();
 
             // Printing the values
             outFile << size << std::endl;

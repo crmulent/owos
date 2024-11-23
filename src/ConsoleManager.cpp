@@ -101,7 +101,8 @@ void ConsoleManager::handleCommand(const std::string &command)
             config_file >> temp >> delays_per_exec;  // Read "delays-per-exec" and the value
             config_file >> temp >> max_mem;
             config_file >> temp >> mem_per_frame;
-            config_file >> temp >> mem_per_proc;
+            config_file >> temp >> min_mem_per_proc;
+            config_file >> temp >> max_mem_per_proc;
 
 
             config_file.close();  // Close the file after reading
@@ -116,12 +117,15 @@ void ConsoleManager::handleCommand(const std::string &command)
             std::cout << "delays_per_exec: " << delays_per_exec << std::endl;
             std::cout << "max-overall-mem: " << max_mem << std::endl;
             std::cout << "mem-per-frame: " << mem_per_frame << std::endl;
-            std::cout << "mem-per-proc: " << mem_per_proc << std::endl;
+            std::cout << "min-mem-per-proc: " << min_mem_per_proc << std::endl;
+            std::cout << "max-mem-per-proc: " << max_mem_per_proc << std::endl;
 
             cpuClock = new CPUClock();
             cpuClock->startCPUClock();
+
+
             processManager = new ProcessManager(min_ins, max_ins, nCPU, scheduler, delays_per_exec, quantum_cycles, cpuClock, max_mem
-                                                , mem_per_frame, mem_per_proc);
+                                                , mem_per_frame, min_mem_per_proc, max_mem_per_proc);
 
             initialized = true;
 
@@ -189,7 +193,7 @@ void ConsoleManager::handleCommand(const std::string &command)
                     }
                     
                     if(screens.size() > 4){
-                        std::this_thread::sleep_for(std::chrono::milliseconds(40));
+                        std::this_thread::sleep_for(std::chrono::milliseconds(50));
                     }
                     
                 }
@@ -208,6 +212,12 @@ void ConsoleManager::handleCommand(const std::string &command)
         } else {
             std::cout << "[ERROR] \"scheduler-test\" is not running\n";
         }
+    }
+    else if(command == "process-smi"){
+        processManager->process_smi();
+    }
+    else if(command == "vmstat"){
+       processManager->vmstat();
     }
     else if (command == "clear")
     {

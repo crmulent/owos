@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <ctime>
 
 class Process
 {
@@ -46,6 +47,8 @@ public:
     std::string getTime() const;
     void setMemory(void* Memory);
     void* getMemory() const;
+    void setAllocTime();
+    std::chrono::time_point<std::chrono::system_clock> getAllocTime();
 
     // Method to generate print commands
     void generate_commands(int minIns, int maxIns);
@@ -55,6 +58,8 @@ private:
     std::string Name;
     std::string Time;
     std::vector<std::shared_ptr<ICommand>> CommandList;
+    std::chrono::time_point<std::chrono::system_clock> allocationTime;  // Use chrono for allocation time
+
 
     size_t mem_per_proc;
     int commandCounter = 0;
