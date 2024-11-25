@@ -35,19 +35,20 @@ void* FlatMemoryAllocator::allocate(std::shared_ptr<Process> process) {
     return nullptr;  // No sufficient contiguous block found
 }
 
-void FlatMemoryAllocator::deallocate(void* ptr, size_t size) {
+void FlatMemoryAllocator::deallocate(std::shared_ptr<Process> process) {
     std::lock_guard<std::mutex> lock(memoryMutex);  // Lock mutex for thread-safe deallocation
-    size_t index = static_cast<char*>(ptr) - &memory[0];
+
+    size_t index = static_cast<char*>(process->getMemory()) - &memory[0];
     if (index < maximumSize && allocationMap[index]) {
-        deallocateAt(index, size);
+        deallocateAt(index, process->getMemoryRequired());
         processList.erase(index);
         nProcess--;
     }
 }
 
-std::string FlatMemoryAllocator::visualizeMemory() {
+void FlatMemoryAllocator::visualizeMemory() {
     std::lock_guard<std::mutex> lock(memoryMutex);  // Lock mutex for consistent visualization
-    return std::string(memory.begin(), memory.end());
+    std::cout << std::string(memory.begin(), memory.end());
 }
 
 void FlatMemoryAllocator::initializeMemory() {
@@ -144,7 +145,7 @@ void FlatMemoryAllocator::deallocateOldest(size_t memSize) {
         std::chrono::time_point<std::chrono::system_clock> allocTime = process->getAllocTime();
 
         // Check if this process has the oldest allocation time and meets the memory requirements
-        if (allocTime < oldestTime && process->getMemoryRequired() >= memSize) {
+        if (allocTime < oldestTime) {
             oldestTime = allocTime;
             oldestIndex = index;
             oldestProcess = process;
@@ -153,6 +154,10 @@ void FlatMemoryAllocator::deallocateOldest(size_t memSize) {
 
     // Now, oldestProcess holds the process with the oldest allocation time
     if (oldestProcess) {
+
+        while(oldestProcess->getState() == Process::ProcessState::RUNNING){
+            //wait until its not running
+        }
         // Log the deallocation info to a backing store file
         std::ofstream backingStore("backingstore.txt", std::ios::app);  // Open file in append mode
 
@@ -169,11 +174,22 @@ void FlatMemoryAllocator::deallocateOldest(size_t memSize) {
 
             backingStore.close();
         }
+        
+        if(oldestProcess->getState() != Process::ProcessState::FINISHED){
+            // Perform the deallocation
+            deallocate(oldestProcess);
+            oldestProcess->setMemory(nullptr);
+        }
 
-        // Perform the deallocation
-        deallocate(oldestProcess->getMemory(), oldestProcess->getMemoryRequired());
-        oldestProcess->setMemory(nullptr);
     } else {
         std::cerr << "No process found to deallocate.\n";
     }
+}
+
+
+size_t FlatMemoryAllocator::getPageIn(){
+    return 0;
+}
+size_t FlatMemoryAllocator::getPageOut(){
+    return 0;
 }

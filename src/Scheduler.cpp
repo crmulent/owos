@@ -165,6 +165,27 @@ void Scheduler::scheduleFCFS(int coreID)
                 }
             }
 
+            void* memory = memoryAllocator->allocate(process);
+
+            //if allocation was succesful
+            if(memory){
+                process->setAllocTime();
+                process->setMemory(memory);
+            }
+
+            //no free memory, replace some
+            if(!memory){
+                do{
+                    memoryAllocator->deallocateOldest(process->getMemoryRequired());
+                    memory = memoryAllocator->allocate(process);
+                    if(memory){
+                        process->setAllocTime();
+                        process->setMemory(memory);
+                    }                        
+                }while(!memory);
+            }
+            
+
             //logActiveThreads(assignedCore, process);
             process->setProcess(Process::ProcessState::RUNNING);
             process->setCPUCOREID(assignedCore);
@@ -195,6 +216,7 @@ void Scheduler::scheduleFCFS(int coreID)
             process->setProcess(Process::ProcessState::FINISHED);
 
             {
+                memoryAllocator->deallocate(process);
                 std::lock_guard<std::mutex> lock(activeThreadsMutex);
                 activeThreads--;
             }
@@ -240,16 +262,27 @@ void Scheduler::scheduleRR(int coreID)
 
             if (!memory) {
                 memory = memoryAllocator->allocate(process);
-                process->setAllocTime();
-                process->setMemory(memory);
+
+                //if allocation was succesful
+                if(memory){
+                    process->setAllocTime();
+                    process->setMemory(memory);
+                }
+
+                //no free memory, replace some
+                if(!memory){
+                    do{
+                        memoryAllocator->deallocateOldest(process->getMemoryRequired());
+                        memory = memoryAllocator->allocate(process);
+                        if(memory){
+                            process->setAllocTime();
+                            process->setMemory(memory);
+                        }                        
+                    }while(!memory);
+                }
             }
             
-            if (!memory) {
-                memoryAllocator->deallocateOldest(process->getMemoryRequired());
-                memory = memoryAllocator->allocate(process);
-                process->setAllocTime();
-                process->setMemory(memory);
-            }
+            
 
             process->setProcess(Process::ProcessState::RUNNING);
             process->setCPUCOREID(coreID);
@@ -297,7 +330,7 @@ void Scheduler::scheduleRR(int coreID)
                 processQueue.push(process);
             } else {
                 process->setProcess(Process::ProcessState::FINISHED);
-                memoryAllocator->deallocate(memory, process->getMemoryRequired());
+                memoryAllocator->deallocate(process);
                 process->setMemory(nullptr);
             }
 

@@ -5,6 +5,7 @@
 #include "Scheduler.h"
 #include "CPUClock.h"
 #include "FlatMemoryAllocator.h"
+#include "PagingAllocator.h"
 
 
 #include <map>

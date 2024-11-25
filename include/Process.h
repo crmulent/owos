@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <ctime>
+#include <cmath>
 
 class Process
 {
@@ -29,7 +30,7 @@ public:
     };
 
     // Constructor
-    Process(int pid, const std::string &name, const std::string &time, int core, int minIns, int maxIns, size_t mem_per_proc);
+    Process(int pid, const std::string &name, const std::string &time, int core, int minIns, int maxIns, size_t mem_per_proc, size_t mem_per_frame);
 
     // Method to execute the current command
     void executeCurrentCommand();
@@ -42,19 +43,21 @@ public:
     void setCPUCOREID(int core);
     ProcessState getState() const;
     void setProcess(ProcessState state);
-    int getPID() const;
+    size_t getPID() const;
     std::string getName() const;
     std::string getTime() const;
     void setMemory(void* Memory);
     void* getMemory() const;
     void setAllocTime();
     std::chrono::time_point<std::chrono::system_clock> getAllocTime();
+    size_t getNumPages();
+    void calculateFrame();
 
     // Method to generate print commands
     void generate_commands(int minIns, int maxIns);
 
 private:
-    int Pid;
+    size_t Pid;
     std::string Name;
     std::string Time;
     std::vector<std::shared_ptr<ICommand>> CommandList;
@@ -62,6 +65,8 @@ private:
 
 
     size_t mem_per_proc;
+    size_t mem_per_frame;
+    size_t nPages;
     int commandCounter = 0;
     int cpuCoreID;
     RequirementFlags requirementFlags;

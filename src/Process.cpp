@@ -1,8 +1,10 @@
 #include "../include/Process.h"
 
 // Constructor implementation
-Process::Process(int pid, const std::string &name, const std::string &time, int core, int minIns, int maxIns, size_t mem_per_proc)
-    : Pid(pid), Name(name), Time(time), cpuCoreID(core), processState(READY), mem_per_proc(mem_per_proc), memory(nullptr){}
+Process::Process(int pid, const std::string &name, const std::string &time, int core, int minIns, int maxIns, size_t mem_per_proc, size_t mem_per_frame)
+    : Pid(pid), Name(name), Time(time), cpuCoreID(core), processState(READY), mem_per_proc(mem_per_proc), mem_per_frame(mem_per_frame), memory(nullptr){
+        calculateFrame();
+    }
 
 // Method to execute the current command
 void Process::executeCurrentCommand()
@@ -13,6 +15,10 @@ void Process::executeCurrentCommand()
         CommandList[commandCounter]->execute();
         commandCounter++;
     }
+}
+
+void Process::calculateFrame() {
+    nPages = static_cast<size_t>(std::pow(2, std::ceil(std::log2(std::ceil(static_cast<double>(mem_per_proc) / mem_per_frame)))));    
 }
 
 // Getter for command counter
@@ -66,7 +72,7 @@ void Process::setProcess(ProcessState state){
 }
 
 // Getter for PID
-int Process::getPID() const
+size_t Process::getPID() const
 {
     return Pid;
 }
@@ -102,4 +108,8 @@ void Process::setAllocTime() {
 // Getter for allocation time
 std::chrono::time_point<std::chrono::system_clock> Process::getAllocTime() {
     return allocationTime;  // Return chrono time_point
+}
+
+size_t Process::getNumPages(){
+    return nPages;
 }

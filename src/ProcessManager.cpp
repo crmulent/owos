@@ -1,5 +1,6 @@
 #include "../include/ProcessManager.h"
 #include "../include/CoreStateManager.h"
+#include <random>
 
 ProcessManager::ProcessManager(int Min_ins, int Max_ins, int NCPU, std::string SchedulerAlgo, int delays_per_exec, int quantum_cycle, CPUClock* CpuClock
                                 , size_t Max_mem, size_t Mem_per_frame, size_t Min_mem_per_proc, size_t Max_mem_per_proc)
@@ -17,7 +18,7 @@ ProcessManager::ProcessManager(int Min_ins, int Max_ins, int NCPU, std::string S
     if(max_mem == mem_per_frame){
         memoryAllocator = new FlatMemoryAllocator(max_mem, mem_per_frame);
     }else{
-        //paging allocator
+        memoryAllocator = new PagingAllocator(max_mem, mem_per_frame);
     }
     
 
@@ -30,7 +31,7 @@ ProcessManager::ProcessManager(int Min_ins, int Max_ins, int NCPU, std::string S
 void ProcessManager::addProcess(string name, string time)
 {
     pid_counter++;
-    shared_ptr<Process> process(new Process(pid_counter, name, time, -1, min_ins, max_ins, generate_memory()));
+    shared_ptr<Process> process(new Process(pid_counter, name, time, -1, min_ins, max_ins, generate_memory(), mem_per_frame));
     processList[name] = process;
     process->generate_commands(min_ins, max_ins);
     scheduler->addProcess(process);
@@ -134,19 +135,22 @@ void ProcessManager::process_smi() {
 }
 
 
-size_t ProcessManager::generate_memory(){
-    std::srand(static_cast<unsigned int>(std::time(nullptr)));
-    return min_mem_per_proc + (std::rand() % (max_mem_per_proc - min_mem_per_proc + 1));
+size_t ProcessManager::generate_memory() {
+    std::random_device rd; // Obtain a random seed
+    std::mt19937 gen(rd()); // Use Mersenne Twister for randomness
+    std::uniform_int_distribution<size_t> dist(min_mem_per_proc, max_mem_per_proc);
+    return dist(gen);
 }
+    
 
 void ProcessManager::vmstat(){
     static std::mutex processListMutex; 
     std::cout << "total memory: " << max_mem << endl;
     std::cout << "used memory:" << max_mem - memoryAllocator->getExternalFragmentation() << endl;
-    std::cout << "free memory" << memoryAllocator->getExternalFragmentation() << endl;
+    std::cout << "free memory: " << memoryAllocator->getExternalFragmentation() << endl;
     std::cout << "idle cpu ticks: " << cpuClock->getCPUClock() - cpuClock->getActiveCPUNum() << endl;
     std::cout << "active cpu ticks: " << cpuClock->getActiveCPUNum() << endl;
     std::cout << "total cpu ticks: " << cpuClock->getCPUClock() << endl;
-    std::cout << "num paged in: " << endl;
-    std::cout << "num paged out: " << endl;
+    std::cout << "num paged in: "<< memoryAllocator->getPageIn() << endl;
+    std::cout << "num paged out: "<< memoryAllocator->getPageOut() << endl;
 }
