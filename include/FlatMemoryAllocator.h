@@ -39,6 +39,7 @@ private:
     void deallocateAt(size_t index, size_t size);              // Frees an allocated block of memory starting at index
     std::mutex memoryMutex;
     std::map<size_t, std::shared_ptr<Process>> processList; //index of starting memory, name, size
+    std::map<size_t, size_t> freeBlocks;
 };
 
 #endif // FLAT_MEMORY_ALLOCATOR_H

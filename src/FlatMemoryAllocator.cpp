@@ -52,40 +52,75 @@ void FlatMemoryAllocator::visualizeMemory() {
 }
 
 void FlatMemoryAllocator::initializeMemory() {
-    std::lock_guard<std::mutex> lock(memoryMutex);  // Lock mutex for initialization
+    std::lock_guard<std::mutex> lock(memoryMutex);
     std::fill(memory.begin(), memory.end(), '.');
     std::fill(allocationMap.begin(), allocationMap.end(), false);
+    freeBlocks.clear();
+    freeBlocks[0] = maximumSize;  // Entire memory is initially free
 }
+
 
 bool FlatMemoryAllocator::canAllocateAt(size_t index, size_t size) const {
-    if (index + size > maximumSize) {
+    auto it = freeBlocks.lower_bound(index);
+    if (it == freeBlocks.end() || it->first > index || index + size > it->first + it->second) {
         return false;
     }
-    for (size_t i = index; i < index + size; ++i) {
-        if (allocationMap[i]) {
-            return false;
-        }
-    }
     return true;
-}
+}   
 
 void FlatMemoryAllocator::allocateAt(size_t index, size_t size) {
-    //std::lock_guard<std::mutex> lock(memoryMutex);  // Lock mutex for allocation
-    for (size_t i = index; i < index + size; ++i) {
-        allocationMap[i] = true;
-        memory[i] = 'X';  // Mark allocated memory for visibility
+    auto it = freeBlocks.lower_bound(index);
+    if (it != freeBlocks.end() && it->first <= index && it->first + it->second >= index + size) {
+        size_t blockStart = it->first;
+        size_t blockSize = it->second;
+        freeBlocks.erase(it);
+
+        // Adjust the free block before and/or after the allocation
+        if (blockStart < index) {
+            freeBlocks[blockStart] = index - blockStart;
+        }
+        if (index + size < blockStart + blockSize) {
+            freeBlocks[index + size] = (blockStart + blockSize) - (index + size);
+        }
+
+        // Mark the memory as allocated
+        for (size_t i = index; i < index + size; ++i) {
+            allocationMap[i] = true;
+            memory[i] = 'X';
+        }
+        allocatedSize += size;
     }
-    allocatedSize += size;
 }
 
+
 void FlatMemoryAllocator::deallocateAt(size_t index, size_t size) {
-    //std::lock_guard<std::mutex> lock(memoryMutex);  // Lock mutex for deallocation
+    // Mark the memory as free
     for (size_t i = index; i < index + size; ++i) {
         allocationMap[i] = false;
-        memory[i] = '.';  // Reset to initial state
+        memory[i] = '.';
     }
     allocatedSize -= size;
+
+    // Merge the deallocated block with adjacent free blocks
+    auto next = freeBlocks.lower_bound(index);
+    auto prev = (next == freeBlocks.begin()) ? freeBlocks.end() : std::prev(next);
+
+    size_t newStart = index;
+    size_t newSize = size;
+
+    if (prev != freeBlocks.end() && prev->first + prev->second == index) {
+        newStart = prev->first;
+        newSize += prev->second;
+        freeBlocks.erase(prev);
+    }
+    if (next != freeBlocks.end() && index + size == next->first) {
+        newSize += next->second;
+        freeBlocks.erase(next);
+    }
+
+    freeBlocks[newStart] = newSize;
 }
+
 
 int FlatMemoryAllocator::getNProcess() {
     std::lock_guard<std::mutex> lock(memoryMutex);  // Lock mutex for thread-safe access

@@ -84,14 +84,14 @@ void ConsoleScreen::displayAllProcessToStream(std::map<std::string, std::shared_
         temp << std::left << std::setw(30) << process->getName() 
             << " (" << process->getTime() << ") ";
         
-        if(process->getState() == Process::READY){
-            temp << "  READY " << "   "
-            << process->getCommandCounter() << " / " 
-            << process->getLinesOfCode() << std::endl;
-            ready << temp.str() << std::endl;
+        // if(process->getState() == Process::READY){
+        //     temp << "  READY " << "   "
+        //     << process->getCommandCounter() << " / " 
+        //     << process->getLinesOfCode() << std::endl;
+        //     ready << temp.str() << std::endl;
 
-        }
-        else if (process->getState() == Process::RUNNING)
+        // }
+        if (process->getState() == Process::RUNNING)
         {
             temp << "  Core: " << process->getCPUCoreID() << "   "
             << process->getCommandCounter() << " / " 
@@ -110,9 +110,9 @@ void ConsoleScreen::displayAllProcessToStream(std::map<std::string, std::shared_
     out << "Cores used: "<<coreUsage<< "\n";
     out << "Cores available: "<<nCore - coreUsage<< "\n";
     out << "------------------------------------------------\n";
-    out << "Ready Processes: \n"
-        << ready.str();
-    std::cout << "==========================================\n";
+    // out << "Ready Processes: \n"
+    //     << ready.str();
+    // std::cout << "==========================================\n";
     out << "\nRunning Processes: \n"
         << running.str();
     std::cout << "==========================================\n";
