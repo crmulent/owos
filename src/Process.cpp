@@ -18,7 +18,7 @@ void Process::executeCurrentCommand()
 }
 
 void Process::calculateFrame() {
-    nPages = static_cast<size_t>(std::pow(2, std::ceil(std::log2(std::ceil(static_cast<double>(mem_per_proc) / mem_per_frame)))));    
+    nPages = static_cast<size_t>(std::ceil(static_cast<double>(mem_per_proc) / mem_per_frame));
 }
 
 // Getter for command counter

@@ -346,44 +346,52 @@ void Scheduler::scheduleRR(int coreID)
 }
 
 
+//just incase if needed again
 void Scheduler::logMemoryState(int n) {
     // Generate filename with the current memory log cycle counter
     std::string filename = "generated_files/memory_stamp_" + std::to_string(n) + ".txt";
     std::ofstream outFile(filename);
 
     if (outFile.is_open()) {
+        // Get the current time and format it safely
         std::time_t currentTime = std::time(nullptr);
-        char timestamp[100];
-        std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", std::localtime(&currentTime));
-        outFile << "Timestamp: (" << timestamp << ")" << std::endl;
+        std::tm currentTime_tm;
 
+        if (localtime_s(&currentTime_tm, &currentTime) == 0) { // Thread-safe time formatting
+            char timestamp[100];
+            std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", &currentTime_tm);
+            outFile << "Timestamp: (" << timestamp << ")" << std::endl;
+        } else {
+            outFile << "Timestamp: (Error formatting time)" << std::endl;
+        }
+
+        // Log memory state
         outFile << "Number of processes in memory: " << memoryAllocator->getNProcess() << std::endl;
         outFile << "Total external fragmentation in KB: " << memoryAllocator->getExternalFragmentation() << std::endl;
         outFile << "\n----end---- = " << memoryAllocator->getMaxMemory() << std::endl << std::endl;
 
+        // Retrieve and iterate through the process list in reverse
         std::map<size_t, std::shared_ptr<Process>> processList2 = memoryAllocator->getProcessList();
-        
-        // Iterate in reverse order to match the display format
         for (auto it = processList2.rbegin(); it != processList2.rend(); ++it) {
-            const auto& pair = *it;
-        
-            size_t index = pair.first;
-            std::shared_ptr<Process> process = pair.second;
+            size_t index = it->first;
+            std::shared_ptr<Process> process = it->second;
 
-            // Accessing the elements of the tuple
+            // Access process attributes
             size_t size = process->getMemoryRequired();
             const std::string& proc_name = process->getName();
 
-            // Printing the values
-            outFile << size << std::endl;
-            outFile << proc_name << std::endl;
-            outFile << index << std::endl << std::endl;
+            // Log process details
+            outFile << "Index: " << index << std::endl;
+            outFile << "Process Name: " << proc_name << std::endl;
+            outFile << "Memory Size: " << size << " KB" << std::endl << std::endl;
         }
 
+        // End of memory log
         outFile << "----start---- = 0" << std::endl;
 
         outFile.close();
     } else {
-        std::cerr << "Unable to open the file!" << std::endl;
+        // Log error if the file could not be opened
+        std::cerr << "Error: Unable to open the file for writing: " << filename << std::endl;
     }
 }

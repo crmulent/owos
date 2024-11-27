@@ -1,6 +1,7 @@
 #include "../include/ProcessManager.h"
 #include "../include/CoreStateManager.h"
 #include <random>
+#include <cmath>
 
 ProcessManager::ProcessManager(int Min_ins, int Max_ins, int NCPU, std::string SchedulerAlgo, int delays_per_exec, int quantum_cycle, CPUClock* CpuClock
                                 , size_t Max_mem, size_t Mem_per_frame, size_t Min_mem_per_proc, size_t Max_mem_per_proc)
@@ -135,24 +136,36 @@ void ProcessManager::process_smi() {
 }
 
 
-size_t ProcessManager::generate_memory() {
-    std::random_device rd; // Obtain a random seed
-    std::mt19937 gen(rd()); // Use Mersenne Twister for randomness
-    std::uniform_int_distribution<size_t> dist(min_mem_per_proc, max_mem_per_proc);
-    return dist(gen);
-}
-    
 
-void ProcessManager::vmstat(){
+
+size_t ProcessManager::generate_memory() {
+    std::random_device rd;  // Obtain a random seed
+    std::mt19937 gen(rd()); // Use Mersenne Twister for randomness
+
+    // Find the minimum and maximum exponent for power of 2 within the range
+    size_t min_exp = static_cast<size_t>(std::log2(min_mem_per_proc));
+    size_t max_exp = static_cast<size_t>(std::log2(max_mem_per_proc));
+
+    // Generate a random exponent in the specified range
+    std::uniform_int_distribution<size_t> dist(min_exp, max_exp);
+    size_t exp = dist(gen);
+
+    // Return the power of 2 corresponding to the random exponent
+    return static_cast<size_t>(std::pow(2, exp));
+}
+
+
+void ProcessManager::vmstat() {
     static std::mutex processListMutex;
-    std::cout << "==========================================" << endl; 
-    std::cout << "total memory KB:  " << max_mem << endl;
-    std::cout << "used memory KB:   " << max_mem - memoryAllocator->getExternalFragmentation() << endl;
-    std::cout << "free memory KB:   " << memoryAllocator->getExternalFragmentation() << endl;
-    std::cout << "idle cpu ticks:   " << cpuClock->getCPUClock() - cpuClock->getActiveCPUNum() << endl;
-    std::cout << "active cpu ticks: " << cpuClock->getActiveCPUNum() << endl;
-    std::cout << "total cpu ticks:  " << cpuClock->getCPUClock() << endl;
-    std::cout << "num paged in:     "<< memoryAllocator->getPageIn() << endl;
-    std::cout << "num paged out:    "<< memoryAllocator->getPageOut() << endl; 
-    std::cout << "==========================================" << endl; 
+    // Print statistics in the desired format
+    std::cout << "==========================================" << std::endl;
+    std::cout << std::setw(12) << max_mem << " KB total memory" << std::endl;
+    std::cout << std::setw(12) << max_mem - memoryAllocator->getExternalFragmentation() << " KB used memory" << std::endl;
+    std::cout << std::setw(12) << memoryAllocator->getExternalFragmentation() << " KB free memory" << std::endl;
+    std::cout << std::setw(12) << cpuClock->getCPUClock() - cpuClock->getActiveCPUNum() << " idle cpu ticks" << std::endl;
+    std::cout << std::setw(12) << cpuClock->getActiveCPUNum() << " active cpu ticks" << std::endl;
+    std::cout << std::setw(12) << cpuClock->getCPUClock() << " total cpu ticks" << std::endl;
+    std::cout << std::setw(12) << memoryAllocator->getPageIn() << " pages paged in" << std::endl;
+    std::cout << std::setw(12) << memoryAllocator->getPageOut() << " pages paged out" << std::endl;
+    std::cout << "==========================================" << std::endl;
 }

@@ -11,11 +11,14 @@
 #include <algorithm>
 
 PagingAllocator::PagingAllocator(size_t maximumSize, size_t mem_per_frame) 
-    : maximumSize(maximumSize), numFrames(maximumSize/mem_per_frame), mem_per_frame(mem_per_frame), nProcess(0), nPagedIn(0), nPagedOut(0){
+    : maximumSize(maximumSize), 
+      numFrames(static_cast<size_t>(std::ceil(static_cast<double>(maximumSize) / mem_per_frame))), 
+      mem_per_frame(mem_per_frame), 
+      nProcess(0), nPagedIn(0), nPagedOut(0) {
 
-        for(size_t i = 0; i < numFrames; ++i){
-            freeFrameList.push_back(i);
-        }
+    for (size_t i = 0; i < numFrames; ++i) {
+        freeFrameList.push_back(i);
+    }
 }
 
 void* PagingAllocator::allocate(std::shared_ptr<Process> process) {
@@ -119,21 +122,30 @@ void PagingAllocator::deallocateOldest(size_t memSize) {
         // Log the deallocation info to a backing store file
         std::ofstream backingStore("backingstore.txt", std::ios::app);  // Open file in append mode
 
-        if (backingStore.is_open()) {
+       if (backingStore.is_open()) {
             // Convert the allocation time to a human-readable format
             std::time_t allocTime_t = std::chrono::system_clock::to_time_t(oldestProcess->getAllocTime());
-            std::tm allocTime_tm = *std::localtime(&allocTime_t);
+            std::tm allocTime_tm;
 
-            // Write the deallocation log
-            backingStore << "Process ID: " << oldestProcess->getPID();
-            backingStore << "  Name: " << oldestProcess->getName();
-            backingStore << "  Command Counter: " << oldestProcess->getCommandCounter() << "/" <<oldestProcess->getLinesOfCode() << "\n";
-            backingStore << "Memory Size: " << oldestProcess->getMemoryRequired() << " KB\n";
-            backingStore << "Num Pages: " << oldestProcess->getNumPages() << "\n";
-            backingStore << "============================================================================\n";
+            // Use localtime_s for thread safety
+            if (localtime_s(&allocTime_tm, &allocTime_t) == 0) { // Check for success
+                // Write the deallocation log
+                backingStore << "Process ID: " << oldestProcess->getPID();
+                backingStore << "  Name: " << oldestProcess->getName();
+                backingStore << "  Command Counter: " << oldestProcess->getCommandCounter()
+                    << "/" << oldestProcess->getLinesOfCode() << "\n";
+                backingStore << "Memory Size: " << oldestProcess->getMemoryRequired() << " KB\n";
+                backingStore << "Num Pages: " << oldestProcess->getNumPages() << "\n";
+                backingStore << "============================================================================\n";
 
-            backingStore.close();
+                backingStore.close();
+            }
+            else {
+                // Handle the error if localtime_s fails
+                std::cerr << "Failed to convert time to local time format." << std::endl;
+            }
         }
+
 
         if(oldestProcess->getState() != Process::ProcessState::FINISHED){
             // Perform the deallocation
