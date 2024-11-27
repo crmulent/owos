@@ -32,7 +32,6 @@ private:
     void run(int coreID);
     void scheduleFCFS(int coreID);
     void scheduleRR(int coreID);
-    void logActiveThreads(int coreID, std::shared_ptr<Process> currentProcess);
     void logMemoryState(int n);
     void startMemoryLog();
 
@@ -49,7 +48,6 @@ private:
     std::mutex queueMutex;
     std::mutex activeThreadsMutex;
     std::condition_variable queueCondition;
-    std::ofstream debugFile;
     std::mutex startMutex;
     std::mutex logMutex;
     std::condition_variable startCondition;

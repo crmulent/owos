@@ -202,9 +202,11 @@ void FlatMemoryAllocator::deallocateOldest(size_t memSize) {
             std::tm allocTime_tm = *std::localtime(&allocTime_t);
 
             // Write the deallocation log
-            backingStore << "Deallocated Process ID: " << oldestProcess->getName() << "\n";
-            backingStore << "Memory Deallocated: " << oldestProcess->getMemoryRequired() << " bytes\n";
-            backingStore << "Deallocation Time: " << std::put_time(&allocTime_tm, "%Y-%m-%d %H:%M:%S") << "\n";
+            backingStore << "Process ID: " << oldestProcess->getPID();
+            backingStore << "  Name: " << oldestProcess->getName();
+            backingStore << "  Command Counter: " << oldestProcess->getCommandCounter() << "/" <<oldestProcess->getLinesOfCode() << "\n";
+            backingStore << "Memory Size: " << oldestProcess->getMemoryRequired() << " KB\n";
+            backingStore << "Num Pages: " << oldestProcess->getNumPages() << "\n";
             backingStore << "============================================================================\n";
 
             backingStore.close();

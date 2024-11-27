@@ -90,7 +90,7 @@ void ProcessManager::process_smi() {
         std::stringstream temp;
         temp << std::left << std::setw(30) << proc_name << " ";
         memory_usage += size;
-        temp << size << " KiB" << endl;
+        temp << size << " KB" << endl;
         running << temp.str() << endl;
     }
 
@@ -118,7 +118,7 @@ void ProcessManager::process_smi() {
     
 
     std::cout << "CPU-Util: " << (static_cast<double>(coreUsage) / nCPU) * 100 << "%" <<endl;
-    std::cout << "Memory Usage: " << memory_usage << "KiB"<< " / " << max_mem << "KiB" << endl;
+    std::cout << "Memory Usage: " << memory_usage << "KB"<< " / " << max_mem << "KB" << endl;
     std::cout << "Memory Util: " << (static_cast<double>(memory_usage) / max_mem) * 100 << "%" << endl;
     
     std::cout << "============================================\n"; 
@@ -144,13 +144,15 @@ size_t ProcessManager::generate_memory() {
     
 
 void ProcessManager::vmstat(){
-    static std::mutex processListMutex; 
-    std::cout << "total memory: " << max_mem << endl;
-    std::cout << "used memory:" << max_mem - memoryAllocator->getExternalFragmentation() << endl;
-    std::cout << "free memory: " << memoryAllocator->getExternalFragmentation() << endl;
-    std::cout << "idle cpu ticks: " << cpuClock->getCPUClock() - cpuClock->getActiveCPUNum() << endl;
+    static std::mutex processListMutex;
+    std::cout << "==========================================" << endl; 
+    std::cout << "total memory KB:  " << max_mem << endl;
+    std::cout << "used memory KB:   " << max_mem - memoryAllocator->getExternalFragmentation() << endl;
+    std::cout << "free memory KB:   " << memoryAllocator->getExternalFragmentation() << endl;
+    std::cout << "idle cpu ticks:   " << cpuClock->getCPUClock() - cpuClock->getActiveCPUNum() << endl;
     std::cout << "active cpu ticks: " << cpuClock->getActiveCPUNum() << endl;
-    std::cout << "total cpu ticks: " << cpuClock->getCPUClock() << endl;
-    std::cout << "num paged in: "<< memoryAllocator->getPageIn() << endl;
-    std::cout << "num paged out: "<< memoryAllocator->getPageOut() << endl;
+    std::cout << "total cpu ticks:  " << cpuClock->getCPUClock() << endl;
+    std::cout << "num paged in:     "<< memoryAllocator->getPageIn() << endl;
+    std::cout << "num paged out:    "<< memoryAllocator->getPageOut() << endl; 
+    std::cout << "==========================================" << endl; 
 }

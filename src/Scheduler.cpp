@@ -9,7 +9,7 @@
 #include <iomanip>
 
 Scheduler::Scheduler(std::string SchedulerAlgo, int delays_per_exec, int nCPU, int quantum_cycle, CPUClock* CpuClock, IMemoryAllocator* memoryAllocator) 
-: running(false), activeThreads(0), debugFile("debug.txt"), readyThreads(0), schedulerAlgo(SchedulerAlgo), delay_per_exec(delays_per_exec)
+: running(false), activeThreads(0), readyThreads(0), schedulerAlgo(SchedulerAlgo), delay_per_exec(delays_per_exec)
 , nCPU(nCPU), quantum_cycle(quantum_cycle), cpuClock(CpuClock), memoryAllocator(memoryAllocator){}
 
 
@@ -102,8 +102,6 @@ void Scheduler::stop() {
             thread.join();
         }
     }
-
-    debugFile.close();
 }
 
 
@@ -347,40 +345,6 @@ void Scheduler::scheduleRR(int coreID)
     }
 }
 
-
-
-void Scheduler::logActiveThreads(int coreID, std::shared_ptr<Process> currentProcess)
-{
-    std::lock_guard<std::mutex> lock(activeThreadsMutex);
-    auto now = std::chrono::system_clock::now();
-    auto now_c = std::chrono::system_clock::to_time_t(now);
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-
-    struct tm timeinfo;
-    localtime_s(&timeinfo, &now_c); // Use localtime_s instead of localtime
-
-    debugFile << "Timestamp: " << std::put_time(&timeinfo, "%Y-%m-%d %H:%M:%S") << "." 
-              << std::setfill('0') << std::setw(3) << ms.count() << " ";
-    debugFile << "Core ID: " << coreID << ", Active Threads: " << activeThreads << ", ";
-
-    if (currentProcess) {
-        debugFile << "Current Process: " << currentProcess->getPID() << "(" 
-                  << currentProcess->getCommandCounter() << "/" << currentProcess->getLinesOfCode() << "), ";
-    } else {
-        debugFile << "Current Process: None, ";
-    }
-
-    debugFile << "Ready Queue: ";
-    std::unique_lock<std::mutex> queueLock(queueMutex); // Lock the queue mutex
-    std::queue<std::shared_ptr<Process>> tempQueue = processQueue; // Copy the queue
-    queueLock.unlock(); // Unlock the queue mutex
-
-    while (!tempQueue.empty()) {
-        debugFile << tempQueue.front()->getPID() << " ";
-        tempQueue.pop();
-    }
-    debugFile << std::endl;
-}
 
 void Scheduler::logMemoryState(int n) {
     // Generate filename with the current memory log cycle counter
