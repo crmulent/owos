@@ -1,8 +1,10 @@
 #include "../include/Process.h"
 
 // Constructor implementation
-Process::Process(int pid, const std::string &name, const std::string &time, int core, int minIns, int maxIns)
-    : Pid(pid), Name(name), Time(time), cpuCoreID(core), processState(READY){}
+Process::Process(int pid, const std::string &name, const std::string &time, int core, int minIns, int maxIns, size_t mem_per_proc, size_t mem_per_frame)
+    : Pid(pid), Name(name), Time(time), cpuCoreID(core), processState(READY), mem_per_proc(mem_per_proc), mem_per_frame(mem_per_frame), memory(nullptr){
+        calculateFrame();
+    }
 
 // Method to execute the current command
 void Process::executeCurrentCommand()
@@ -15,16 +17,37 @@ void Process::executeCurrentCommand()
     }
 }
 
+void Process::calculateFrame() {
+    nPages = static_cast<size_t>(std::ceil(static_cast<double>(mem_per_proc) / mem_per_frame));
+}
+
 // Getter for command counter
 int Process::getCommandCounter() const
 {
     return commandCounter;
 }
 
+// Getter for command counter
+void Process::setMemory(void* Memory)
+{
+    memory = Memory;
+}
+
+void* Process::getMemory() const
+{
+    return memory;
+}
+
+
+
 // Getter for number of commands
 int Process::getLinesOfCode() const
 {
     return CommandList.size();
+}
+
+size_t Process::getMemoryRequired() const{
+    return mem_per_proc;
 }
 
 // Getter for CPU core ID
@@ -49,7 +72,7 @@ void Process::setProcess(ProcessState state){
 }
 
 // Getter for PID
-int Process::getPID() const
+size_t Process::getPID() const
 {
     return Pid;
 }
@@ -76,4 +99,17 @@ void Process::generate_commands(int minIns, int maxIns) {
         std::shared_ptr<ICommand> cmd = std::make_shared<PrintCommand>(Pid, cpuCoreID, "Hello World From " + Name + " started.", Name);
         CommandList.push_back(cmd);
     }
+}
+
+void Process::setAllocTime() {
+    allocationTime = std::chrono::system_clock::now();  // Use chrono's system clock
+}
+
+// Getter for allocation time
+std::chrono::time_point<std::chrono::system_clock> Process::getAllocTime() {
+    return allocationTime;  // Return chrono time_point
+}
+
+size_t Process::getNumPages(){
+    return nPages;
 }

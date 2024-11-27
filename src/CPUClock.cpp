@@ -1,6 +1,6 @@
 #include "../include/CPUClock.h"
 
-CPUClock::CPUClock() : cpuClock(0) {}
+CPUClock::CPUClock() : cpuClock(0), activeNum(0){}
 
 int CPUClock::getCPUClock() {
     return cpuClock.load();
@@ -31,4 +31,14 @@ void CPUClock::stopCPUClock() {
         CPUClockThread.join();
         std::cout << "CPU Clock stopped\n";
     }
+}
+
+
+std::atomic<int> CPUClock::getActiveCPUNum(){
+    return activeNum.load();
+}
+
+
+void CPUClock::incrementActiveCPUNum(){
+    activeNum++;
 }
