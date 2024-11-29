@@ -22,33 +22,38 @@ FlatMemoryAllocator::~FlatMemoryAllocator() {
 
 void* FlatMemoryAllocator::allocate(std::shared_ptr<Process> process) {
     size_t size = process->getMemoryRequired();
-    
+
     std::lock_guard<std::mutex> lock(memoryMutex);  // Lock mutex to prevent concurrent access
-    for (size_t i = 0; i <= maximumSize - size; ++i) {
-        if (canAllocateAt(i, size)) {
-            allocateAt(i, size);
+    for (auto it = freeBlocks.begin(); it != freeBlocks.end(); ++it) {
+        size_t blockStart = it->first;
+        size_t blockSize = it->second;
+
+        if (blockSize >= size) {
+            allocateAt(blockStart, size);
             nProcess++;
-            processList[i] = process;
-            return &memory[i];
+            processList[blockStart] = process;
+            return reinterpret_cast<void*>(&memory[blockStart]);  // Return pointer to start of allocated block
         }
     }
     return nullptr;  // No sufficient contiguous block found
 }
 
+
 void FlatMemoryAllocator::deallocate(std::shared_ptr<Process> process) {
     std::lock_guard<std::mutex> lock(memoryMutex);  // Lock mutex for thread-safe deallocation
 
     size_t index = static_cast<char*>(process->getMemory()) - &memory[0];
-    if (index < maximumSize && allocationMap[index]) {
-        deallocateAt(index, process->getMemoryRequired());
+    if (index < maximumSize && processList.count(index)) {
+        size_t size = process->getMemoryRequired();
+        deallocateAt(index, size);
         processList.erase(index);
         nProcess--;
     }
 }
 
+
 void FlatMemoryAllocator::visualizeMemory() {
-    std::lock_guard<std::mutex> lock(memoryMutex);  // Lock mutex for consistent visualization
-    std::cout << std::string(memory.begin(), memory.end());
+
 }
 
 void FlatMemoryAllocator::initializeMemory() {
@@ -77,30 +82,18 @@ void FlatMemoryAllocator::allocateAt(size_t index, size_t size) {
 
         // Adjust the free block before and/or after the allocation
         if (blockStart < index) {
-            freeBlocks[blockStart] = index - blockStart;
+            freeBlocks[blockStart] = index - blockStart; // Remaining free space before allocation
         }
         if (index + size < blockStart + blockSize) {
-            freeBlocks[index + size] = (blockStart + blockSize) - (index + size);
+            freeBlocks[index + size] = (blockStart + blockSize) - (index + size); // Remaining free space after allocation
         }
 
-        // Mark the memory as allocated
-        for (size_t i = index; i < index + size; ++i) {
-            allocationMap[i] = true;
-            memory[i] = 'X';
-        }
         allocatedSize += size;
     }
 }
 
 
 void FlatMemoryAllocator::deallocateAt(size_t index, size_t size) {
-    // Mark the memory as free
-    for (size_t i = index; i < index + size; ++i) {
-        allocationMap[i] = false;
-        memory[i] = '.';
-    }
-    allocatedSize -= size;
-
     // Merge the deallocated block with adjacent free blocks
     auto next = freeBlocks.lower_bound(index);
     auto prev = (next == freeBlocks.begin()) ? freeBlocks.end() : std::prev(next);
@@ -108,17 +101,23 @@ void FlatMemoryAllocator::deallocateAt(size_t index, size_t size) {
     size_t newStart = index;
     size_t newSize = size;
 
+    // Check if the previous free block can be merged
     if (prev != freeBlocks.end() && prev->first + prev->second == index) {
         newStart = prev->first;
         newSize += prev->second;
         freeBlocks.erase(prev);
     }
+
+    // Check if the next free block can be merged
     if (next != freeBlocks.end() && index + size == next->first) {
         newSize += next->second;
         freeBlocks.erase(next);
     }
 
+    // Insert the merged free block into the map
     freeBlocks[newStart] = newSize;
+
+    allocatedSize -= size;
 }
 
 
