@@ -153,8 +153,6 @@ void PagingAllocator::deallocateOldest(size_t memSize) {
             oldestProcess->setMemory(nullptr);
         }
 
-    } else {
-        std::cerr << "No process found to deallocate.\n";
     }
 }
 
