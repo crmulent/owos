@@ -36,18 +36,38 @@ void* PagingAllocator::allocate(std::shared_ptr<Process> process) {
 
 void PagingAllocator::deallocate(std::shared_ptr<Process> process) {
     std::lock_guard<std::mutex> lock(memoryMutex);
-    processList.erase(process->getPID());    
+    processList.erase(process->getPID());
     nProcess--;
 
-    auto it = std::find_if(frameMap.begin(), frameMap.end(), [process](const auto& entry) {return entry.second == process;});
+    auto it = std::find_if(frameMap.begin(), frameMap.end(), [process](const auto& entry) { return entry.second == process; });
 
-    while(it !=frameMap.end()){
+    while (it != frameMap.end()) {
         size_t frameIndex = it->first;
         deallocateFrames(1, frameIndex);
-        it = std::find_if(frameMap.begin(), frameMap.end(), [process](const auto& entry) {return entry.second == process;});
+        it = std::find_if(frameMap.begin(), frameMap.end(), [process](const auto& entry) { return entry.second == process; });
     }
 
+    // std::cout << "test " << frameMap.size() << std::endl;
+
+    // Ensure that the total frames in freeFrameList and frameMap are equal to numFrames
+    size_t totalAllocatedFrames = frameMap.size();
+    size_t totalFreeFrames = freeFrameList.size();
+
+    // Check if the total allocated and free frames equal numFrames
+    if (totalAllocatedFrames + totalFreeFrames != numFrames) {
+        size_t missingFrames = numFrames - (totalAllocatedFrames + totalFreeFrames);
+        if (missingFrames > 0) {
+            // Add missing frames back to freeFrameList
+            for (size_t i = 0; i < missingFrames; ++i) {
+                freeFrameList.push_back(numFrames + i);  // Add new frames beyond numFrames
+            }
+
+            
+
+        } 
+    }
 }
+
 
 
 void PagingAllocator::visualizeMemory() {
@@ -119,6 +139,7 @@ void PagingAllocator::deallocateOldest(size_t memSize) {
         while(oldestProcess->getState() == Process::ProcessState::RUNNING){
             //wait until its not running
         }
+        
         // Log the deallocation info to a backing store file
         std::ofstream backingStore("backingstore.txt", std::ios::app);  // Open file in append mode
 
